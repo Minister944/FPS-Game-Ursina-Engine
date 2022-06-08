@@ -8,9 +8,9 @@ from ursina.shaders import lit_with_shadows_shader
 
 
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
-ak_47_obj = 'assets\\gun\\ak_47.obj'
+ak_47_obj = 'assets/gun/ak_47.obj'
 ACP_Smith_texture = load_texture('assets/gun/ACP_Smith.jpg')
-ACP_Smith_obj = 'assets\\gun\\ACP_Smith.obj'
+ACP_Smith_obj = 'assets/gun/ACP_Smith.obj'
 
 
 class Wepon(Entity):

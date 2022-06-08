@@ -43,6 +43,8 @@ def input(key):
         block_pick = 3
     if held_keys['4']:
         block_pick = 4
+    if held_keys['esc']:
+        print("exit")
 
 
 class Bullet(Entity):
@@ -133,7 +135,7 @@ class Voxel(Button):
         super().__init__(
             parent=scene,
             position=position,
-            model='assets\\block',
+            model='assets/block',
             origin_y=0.5,
             texture=texture,
             color=color.color(0, 0, random.uniform(0.9, 1)),
@@ -169,7 +171,7 @@ class Hand(Entity):
     def __init__(self):
         super().__init__(
             parent=playerr.camera_pivot,
-            model='assets\\gun\\ak_47.obj',
+            model='assets/gun/ak_47.obj',
             texture=ak_47_texture,
             scale=0.8,
             rotation=Vec3(2, 88, 1),

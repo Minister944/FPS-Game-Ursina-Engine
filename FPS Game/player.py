@@ -18,7 +18,7 @@ class Player(FirstPersonController):
         self.global_var = globalVariable()
         self.hp = 100
         self.text = Text(text="0/0", x=0.8, y=-0.45)
-        self.hp = Text(text="<image:assets\\NewImage-2>   " +
+        self.hp = Text(text="<image:assets/NewImage-2>   " +
                        str(self.hp), x=-0.85, y=-0.45)
         self.weapons = [ak_47(who=self, global_var=self.global_var), ACP_Smith(
             who=self, global_var=self.global_var)]
