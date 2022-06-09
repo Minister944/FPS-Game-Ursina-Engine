@@ -75,7 +75,6 @@ class Enginer(Player):
         self.barrier_count = 3
         self.barrier_count_old = self.barrier_count
     def update(self):
-        print(self.global_var.Build)
         if  held_keys['f'] and self.barrier_count > 0:
             
             self.global_var.Build = True

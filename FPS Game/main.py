@@ -87,20 +87,20 @@ class Voxel(Button):
             color=color.color(0, 0, random.uniform(0.9, 1)),
             scale=0.5,)
 
-    def input(self, key):
-        if self.hovered:
-            if key == 'left mouse down':
-                if block_pick == 3:
-                    voxel = Voxel(position=self.position +
-                                  mouse.normal, texture=stone_texture)
-                if block_pick == 4:
-                    voxel = Voxel(position=self.position +
-                                  mouse.normal, texture=brick_texture)
-                if block_pick == 5:
-                    voxel = Voxel(position=self.position +
-                                  mouse.normal, texture=dirt_texture)
-            # if key == 'right mouse down':
-            #     destroy(self)
+    # def input(self, key):
+    #     if self.hovered:
+    #         if key == 'left mouse down':
+    #             if block_pick == 3:
+    #                 voxel = Voxel(position=self.position +
+    #                               mouse.normal, texture=stone_texture)
+    #             if block_pick == 4:
+    #                 voxel = Voxel(position=self.position +
+    #                               mouse.normal, texture=brick_texture)
+    #             if block_pick == 5:
+    #                 voxel = Voxel(position=self.position +
+    #                               mouse.normal, texture=dirt_texture)
+    #         if key == 'right mouse down':
+    #             destroy(self)
 
 
 class Sky(Entity):
@@ -112,10 +112,11 @@ class Sky(Entity):
             scale=150,
             double_sided=True)
 
-for x in range(16):
-    for z in range(16):
-        Voxel((x, 0, z))
+# for x in range(16):
+#     for z in range(16):
+#         Voxel((x, 0, z))
 
+plane = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
 #player.collider = BoxCollider(player, Vec3(0,1,0), Vec3(1,2,1))
 
 enemy = Enemy()

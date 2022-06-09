@@ -4,12 +4,15 @@ from player import *
 from globalVar import *
 from ursina.shaders import lit_with_shadows_shader
 
-
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
 ak_47_obj = 'assets/gun/ak_47.obj'
+ak_47_audio_shot = 'assets/lututu.wav'
+ak_47_audio_reload = 'assets/gun-reload-sound-fx_C_minor'
+
 ACP_Smith_texture = load_texture('assets/gun/ACP_Smith.jpg')
 ACP_Smith_obj = 'assets/gun/ACP_Smith.obj'
-
+ACP_Smith_audio_shot = 'assets/lututu.wav'
+ACP_Smith_audio_reload = 'assets/gun-reload-sound-fx_C_minor'
 
 class Wepon(Entity):
     def __init__(self,
@@ -33,6 +36,7 @@ class Wepon(Entity):
         self.startReload = time.time()
         self.who = who
         self.who.gui(self.amo, self.magazine)
+        #TODO add self.audio ... self.obj self.texture
 
     def on_enable(self):
         try:
@@ -93,7 +97,7 @@ class Wepon(Entity):
             #     except Exception:
             #         print("nothing")
 
-            Audio("assets\\lututu.wav", volume=0.02)
+            Audio(ak_47_audio_shot, volume=0.02)
             self.amo -= 1
             self.who.gui(self.amo, self.magazine)
 
@@ -110,7 +114,7 @@ class Wepon(Entity):
         self.who.speed = 3
         self.magazine -= 1
         self.amo = self.maxAmo
-        Audio("assets\\gun-reload-sound-fx_C_minor", volume=0.1)
+        Audio(ak_47_audio_reload, volume=0.1)
         self.who.gui(self.amo, self.magazine)
 
     def aiming(self):
