@@ -3,11 +3,12 @@ from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina.shaders import lit_with_shadows_shader
 
 app = Ursina(fullscreen=False, vsync=False)
+window.borderless = False 
 
 from player import *
 from particleSystem import *
 
-playerr = Enginer(Vec3(5, 0, 0))
+main_player = Enginer(Vec3(5, 0, 0))
 
 
 grass_texture = load_texture('assets/grass_block.png')
@@ -19,6 +20,13 @@ arm_texture = load_texture('assets/arm_texture.png')
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
 
 
+def input(key):
+    if key == 'escape':
+        mouse.locked = False
+        mouse.visible = True
+    if key == 'q':
+        quit()
+    
 class Bullet(Entity):
     def __init__(self, distance=50, lifetime=10, **kwargs):
         super().__init__(**kwargs)
@@ -28,7 +36,7 @@ class Bullet(Entity):
 
     def update(self, **kwargs):
         ray = raycast(self.world_position, self.forward,
-                      distance=self.distance, ignore=(self, playerr))
+                      distance=self.distance, ignore=(self, main_player))
         if not ray.hit and time.time() - self.start < self.lifetime:
             self.world_position += self.forward * self.distance * time.dt
         else:
@@ -64,14 +72,14 @@ class Enemy(Entity):
             destroy(self)
 
     def update2(self):
-        dist = distance_xz(playerr.position, self.position)
+        dist = distance_xz(main_player.position, self.position)
 
         if dist > 40:
             return
-        self.look_at_2d(playerr.position, 'y')
+        self.look_at_2d(main_player.position, 'y')
         hit_info = raycast(self.world_position + Vec3(0, 1, 0),
                            self.forward, 30, ignore=(self,))
-        if hit_info.entity == playerr:
+        if hit_info.entity == main_player:
             if dist > 2:
                 self.position += self.forward * time.dt * 5
 
@@ -120,8 +128,9 @@ plane = Entity(model='plane', collider='box', scale=64, texture='grass', texture
 #player.collider = BoxCollider(player, Vec3(0,1,0), Vec3(1,2,1))
 
 enemy = Enemy()
+
 pivot = Entity()
-
-
 DirectionalLight(parent=pivot, y=4, z=4, shadows=True, rotation=(45, -45, 45))
+
+
 app.run()

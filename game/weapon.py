@@ -35,12 +35,14 @@ class Wepon(Entity):
         self.startHit = time.time()
         self.startReload = time.time()
         self.who = who
-        self.who.gui(self.amo, self.magazine)
+        self.who.update_hud(self.amo, self.magazine)
+        self.audio_shot = ak_47_audio_shot
+        self.audio_reload = ak_47_audio_reload
         #TODO add self.audio ... self.obj self.texture
 
     def on_enable(self):
         try:
-            self.who.gui(self.amo, self.magazine)
+            self.who.update_hud(self.amo, self.magazine)
         except:
             pass
 
@@ -97,9 +99,9 @@ class Wepon(Entity):
             #     except Exception:
             #         print("nothing")
 
-            Audio(ak_47_audio_shot, volume=0.02)
+            Audio(self.audio_shot, volume=0.02)
             self.amo -= 1
-            self.who.gui(self.amo, self.magazine)
+            self.who.update_hud(self.amo, self.magazine)
 
     def recoiling(self, forward, rotation_x, rotation_y):
         rotation_x -= self.recoil * (random.randint(33, 66)/100)
@@ -114,8 +116,8 @@ class Wepon(Entity):
         self.who.speed = 3
         self.magazine -= 1
         self.amo = self.maxAmo
-        Audio(ak_47_audio_reload, volume=0.1)
-        self.who.gui(self.amo, self.magazine)
+        Audio(self.audio_reload, volume=0.1)
+        self.who.update_hud(self.amo, self.magazine)
 
     def aiming(self):
         if self.global_var.Aiming:
@@ -164,7 +166,9 @@ class ACP_Smith(Wepon):
         self.amo = self.maxAmo
         self.magazine = 8
         self.recoil = 20
-        self.who.gui(self.amo, self.magazine)
+        self.who.update_hud(self.amo, self.magazine)
+        self.audio_shot = ACP_Smith_audio_shot
+        self.audio_reload = ACP_Smith_audio_reload
 
     def recoiling(self, forward, rotation_x, rotation_y):
         rotation_x -= self.recoil * (random.randint(33, 66)/100)
