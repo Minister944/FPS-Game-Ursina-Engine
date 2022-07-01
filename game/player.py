@@ -16,9 +16,19 @@ class Player(FirstPersonController):
             speed=7
         )
         self.global_var = globalVariable()
+
+        # state
+        # self.Crouch = False
+        # self.Running = False
+        # self.Reload = False
+        # self.Aiming = False
+        # self.Shooting = False
+        # self.Build = False
+
         self.hp = 100
         self.text = Text(text="0/0", x=0.8, y=-0.45)
-        self.hp = Text(text="<image:assets/NewImage-2>   " + str(self.hp), x=-0.85, y=-0.45)
+        self.hp = Text(text="<image:assets/NewImage-2>   " +
+                       str(self.hp), x=-0.85, y=-0.45)
         self.weapons = [ak_47(who=self, global_var=self.global_var), ACP_Smith(
             who=self, global_var=self.global_var)]
         self.weapons[0].enabled = False
@@ -74,21 +84,24 @@ class Enginer(Player):
         self.barrier = Prefabs()
         self.barrier_count = 3
         self.barrier_count_old = self.barrier_count
+
     def update(self):
-        if  held_keys['f'] and self.barrier_count > 0:
-            
+        if held_keys['f'] and self.barrier_count > 0:
+
             self.global_var.Build = True
             if self.barrier_count == self.barrier_count_old:
                 self.barrier.visible = True
 
-            ray = raycast(self.camera_pivot.world_position, self.camera_pivot.forward, distance=10, ignore=(self,))
+            ray = raycast(self.camera_pivot.world_position,
+                          self.camera_pivot.forward, distance=10, ignore=(self,))
             if ray.hit:
                 self.barrier.world_position = ray.world_point + Vec3(0, 0.5, 0)
                 if self.barrier_count == self.barrier_count_old and mouse.left:
                     self.barrier_count -= 1
-                    e = Entity(model='cube', color=color.orange, position=ray.world_point + Vec3(0, 0.5, 0), collider='box', shader=lit_with_shadows_shader)
+                    e = Entity(model='cube', color=color.orange, position=ray.world_point +
+                               Vec3(0, 0.5, 0), collider='box', shader=lit_with_shadows_shader)
                     self.barrier.visible = False
-            
+
         else:
             self.barrier_count_old = self.barrier_count
             self.barrier.visible = False

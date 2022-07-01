@@ -1,6 +1,12 @@
 from ursina import *
-from ursina.prefabs.first_person_controller import FirstPersonController
 from ursina.shaders import lit_with_shadows_shader
+
+import os
+import sys
+import socket
+import threading
+import ursina
+from network import Network
 
 app = Ursina(fullscreen=False, vsync=False)
 window.borderless = False 
@@ -10,6 +16,40 @@ from particleSystem import *
 
 main_player = Enginer(Vec3(5, 0, 0))
 
+# username = input("Enter your username: ")
+username = "Kacper"
+while True:
+    # server_addr = input("Enter server IP: ")
+    # server_port = input("Enter server port: ")
+    server_addr = "0.0.0.0"
+    server_port = 1024
+    try:
+        server_port = int(server_port)
+    except ValueError:
+        print("\nThe port you entered was not a number, try again with a valid port...")
+        continue
+
+    n = Network(server_addr, server_port, username)
+    n.settimeout(5)
+
+    error_occurred = False
+
+    try:
+        n.connect()
+    except ConnectionRefusedError:
+        print("\nConnection refused! This can be because server hasn't started or has reached it's player limit.")
+        # error_occurred = True
+    except socket.timeout:
+        print("\nServer took too long to respond, please try again...")
+        # error_occurred = True
+    except socket.gaierror:
+        print("\nThe IP address you entered is invalid, please try again with a valid address...")
+        # error_occurred = True
+    finally:
+        n.settimeout(None)
+
+    if not error_occurred:
+        break
 
 grass_texture = load_texture('assets/grass_block.png')
 stone_texture = load_texture('assets/stone_block.png')
@@ -26,7 +66,12 @@ def input(key):
         mouse.visible = True
     if key == 'q':
         quit()
-    
+
+
+# def update():
+#     n.send_player(main_player)
+
+
 class Bullet(Entity):
     def __init__(self, distance=50, lifetime=10, **kwargs):
         super().__init__(**kwargs)
