@@ -36,9 +36,10 @@ class Wepon(Entity):
         self.startReload = time.time()
         self.who = who
         self.who.update_hud(self.amo, self.magazine)
+
         self.audio_shot = ak_47_audio_shot
         self.audio_reload = ak_47_audio_reload
-        #TODO add self.audio ... self.obj self.texture
+        #TODO self.texture
 
     def on_enable(self):
         try:

@@ -24,17 +24,17 @@ class Network:
         self.client.send(self.username.encode("utf8"))
 
     def send_player(self, player):
-        player_info = {
-            "object": "player",
-            "id": self.id,
-            "position": (player.world_x, player.world_y, player.world_z),
-            "rotation": player.rotation_y,
-            "health": 20,
-            "joined": False,
-            "left": False
-        }
-        player_info_encoded = json.dumps(player_info).encode("utf8")
 
+        # player_info = {
+        #     "object": "player",
+        #     "id": self.id,
+        #     "joined": False,
+        #     "left": False,
+        # }
+        # player_info = dict(player_info, **player.player_to_dict())
+        player_info = player.player_to_dict()
+        player_info_encoded = json.dumps(player_info).encode("utf8")
+        print(player_info_encoded)
         try:
             self.client.send(player_info_encoded)
         except socket.error as e:

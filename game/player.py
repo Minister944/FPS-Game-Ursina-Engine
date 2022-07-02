@@ -17,15 +17,8 @@ class Player(FirstPersonController):
         )
         self.global_var = globalVariable()
 
-        # state
-        # self.Crouch = False
-        # self.Running = False
-        # self.Reload = False
-        # self.Aiming = False
-        # self.Shooting = False
-        # self.Build = False
-
         self.hp = 100
+
         self.text = Text(text="0/0", x=0.8, y=-0.45)
         self.hp = Text(text="<image:assets/NewImage-2>   " +
                        str(self.hp), x=-0.85, y=-0.45)
@@ -34,12 +27,27 @@ class Player(FirstPersonController):
         self.weapons[0].enabled = False
         self.weapons[0].enabled = True
 
-        self.cuurent_weapon = 0
+        self.current_weapon = 0
         self.switch_weapon()
+
+    def player_to_dict(self):
+        resultat = {
+            "global_var": {
+                "Crouch": self.global_var.Crouch,
+                "Running": self.global_var.Running,
+                "Reload": self.global_var.Reload,
+                "Aiming": self.global_var.Crouch,
+                "Shooting": self.global_var.Crouch,
+                "Build": self.global_var.Crouch, },
+            "hp": self.hp,
+            "weapons": [type(wepon).__name__ for wepon in self.weapons],
+            "current_weapon": self.current_weapon,
+        }
+        return resultat
 
     def switch_weapon(self):
         for i, v in enumerate(self.weapons):
-            if i == self.cuurent_weapon:
+            if i == self.current_weapon:
                 v.enabled = True
             else:
                 v.enabled = False
@@ -59,17 +67,17 @@ class Player(FirstPersonController):
 
     def input(self, key):
         try:
-            self.cuurent_weapon = int(key) - 1
+            self.current_weapon = int(key) - 1
             self.switch_weapon()
         except ValueError:
             pass
 
         if key == "scroll up":
-            self.cuurent_weapon = (self.cuurent_weapon + 1) % len(self.weapons)
+            self.current_weapon = (self.current_weapon + 1) % len(self.weapons)
             self.switch_weapon()
         if key == "scroll down":
             self.switch_weapon()
-            self.cuurent_weapon = (self.cuurent_weapon - 1) % len(self.weapons)
+            self.current_weapon = (self.current_weapon - 1) % len(self.weapons)
 
         return super().input(key)
 

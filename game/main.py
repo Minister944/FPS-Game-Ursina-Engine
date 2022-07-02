@@ -1,11 +1,7 @@
 from ursina import *
 from ursina.shaders import lit_with_shadows_shader
 
-import os
-import sys
 import socket
-import threading
-import ursina
 from network import Network
 
 app = Ursina(fullscreen=False, vsync=False)
@@ -13,8 +9,11 @@ window.borderless = False
 
 from player import *
 from particleSystem import *
+window.title = "FPS Ursina"
 
 main_player = Enginer(Vec3(5, 0, 0))
+prev_pos = main_player.world_position
+prev_dir = main_player.world_rotation_y
 
 # username = input("Enter your username: ")
 username = "Kacper"
@@ -67,9 +66,24 @@ def input(key):
     if key == 'q':
         quit()
 
+#TODO sprawdz wysylanie danych po zmianie
+
+def update():
+    if main_player.hp > 0:
+        global prev_pos, prev_dir
+
+        if prev_pos != main_player.world_position or prev_dir != main_player.world_rotation_y:
+            n.send_player(main_player)
 
 # def update():
-#     n.send_player(main_player)
+#     if player.health > 0:
+#         global prev_pos, prev_dir
+
+#         if prev_pos != player.world_position or prev_dir != player.world_rotation_y:
+#             n.send_player(player)
+
+#         prev_pos = player.world_position
+#         prev_dir = player.world_rotation_y
 
 
 class Bullet(Entity):
