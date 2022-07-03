@@ -1,6 +1,7 @@
 from ursina import *
 from ursina.shaders import lit_with_shadows_shader
 
+import threading
 import socket
 from network import Network
 
@@ -14,6 +15,7 @@ window.title = "FPS Ursina"
 main_player = Enginer(Vec3(5, 0, 0))
 prev_pos = main_player.world_position
 prev_dir = main_player.world_rotation_y
+enemies = []
 
 # username = input("Enter your username: ")
 username = "Kacper"
@@ -50,6 +52,76 @@ while True:
     if not error_occurred:
         break
 
+
+class Enemy(Entity):
+    def __init__(self, position: Vec3, identifier: str, username: str):
+        super().__init__(
+            position=position,
+            model='cube',
+            collider='box',
+            shader=lit_with_shadows_shader,
+            scale_y=2,
+            origin_y=-.5,
+            color=color.light_gray,
+        )
+        self.hp = 100
+        self.id = identifier
+        self.username = username
+
+        self.name_tag = Text(
+            parent=self,
+            text=username,
+            position=Vec3(0, 1.3, 0),
+            scale=Vec2(5, 3),
+            billboard=True,
+            origin=Vec2(0, 0)
+        )
+
+    def hit(self, damage, target):
+        print(target, "hit", self, "damage:", damage)
+        self.hp -= damage
+        if self.hp <= 0:
+            destroy(self)
+
+def receive():
+    while True:
+        try:
+            info = n.receive_info()
+        except Exception as e:
+            print(e)
+            continue
+
+        if not info:
+            print("Server has stopped! Exiting...")
+            sys.exit()
+
+        if info["object"] == "player":
+            enemy_id = info["id"]
+
+            if info["joined"]:
+                new_enemy = Enemy(Vec3(*info["position"]), enemy_id, info["username"])
+                new_enemy.health = info["hp"]
+                enemies.append(new_enemy)
+                continue
+
+            enemy = None
+
+            for e in enemies:
+                if e.id == enemy_id:
+                    enemy = e
+                    break
+
+            if not enemy:
+                continue
+
+            enemy.world_position = Vec3(*info["position"])
+            enemy.rotation_y = info["rotation"]
+
+        print(info)
+
+msg_thread = threading.Thread(target=receive, daemon=True)
+msg_thread.start()
+
 grass_texture = load_texture('assets/grass_block.png')
 stone_texture = load_texture('assets/stone_block.png')
 brick_texture = load_texture('assets/brick_block.png')
@@ -66,14 +138,14 @@ def input(key):
     if key == 'q':
         quit()
 
-#TODO sprawdz wysylanie danych po zmianie
-
 def update():
     if main_player.hp > 0:
         global prev_pos, prev_dir
-
-        if prev_pos != main_player.world_position or prev_dir != main_player.world_rotation_y:
+        
+        if prev_pos != round(main_player.world_position) or prev_dir != round(main_player.world_rotation_y):
             n.send_player(main_player)
+            prev_pos = round(main_player.world_position)
+            prev_dir = round(main_player.world_rotation_y)
 
 # def update():
 #     if player.health > 0:
@@ -109,38 +181,6 @@ class Bullet(Entity):
                 print("nothing method")
             destroy(self)
 
-
-class Enemy(Entity):
-    def __init__(self, position=(0, 0, 0), hp=100, **kwargs):
-        super().__init__(
-            position=position,
-            model='cube',
-            collider='box',
-            shader=lit_with_shadows_shader,
-            scale_y=2,
-            origin_y=-.5,
-            color=color.light_gray,
-            **kwargs
-        )
-        self.hp = hp
-
-    def hit(self, damage, target):
-        print(target, "hit", self, "damage:", damage)
-        self.hp -= damage
-        if self.hp <= 0:
-            destroy(self)
-
-    def update2(self):
-        dist = distance_xz(main_player.position, self.position)
-
-        if dist > 40:
-            return
-        self.look_at_2d(main_player.position, 'y')
-        hit_info = raycast(self.world_position + Vec3(0, 1, 0),
-                           self.forward, 30, ignore=(self,))
-        if hit_info.entity == main_player:
-            if dist > 2:
-                self.position += self.forward * time.dt * 5
 
 
 class Voxel(Button):
@@ -185,8 +225,6 @@ class Sky(Entity):
 
 plane = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
 #player.collider = BoxCollider(player, Vec3(0,1,0), Vec3(1,2,1))
-
-enemy = Enemy()
 
 pivot = Entity()
 DirectionalLight(parent=pivot, y=4, z=4, shadows=True, rotation=(45, -45, 45))

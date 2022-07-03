@@ -25,17 +25,31 @@ class Network:
 
     def send_player(self, player):
 
-        # player_info = {
-        #     "object": "player",
-        #     "id": self.id,
-        #     "joined": False,
-        #     "left": False,
-        # }
-        # player_info = dict(player_info, **player.player_to_dict())
-        player_info = player.player_to_dict()
+        player_info = {
+            "object": "player",
+            "id": self.id,
+            "joined": False,
+            "left": False,
+        }
+        player_info = dict(player_info, **player.player_to_dict())
+
         player_info_encoded = json.dumps(player_info).encode("utf8")
-        print(player_info_encoded)
         try:
             self.client.send(player_info_encoded)
         except socket.error as e:
             print(e)
+
+    def receive_info(self):
+        try:
+            msg = self.client.recv(self.recv_size)
+        except socket.error as e:
+            print(e)
+
+        if not msg:
+            return None
+
+        msg_decoded = msg.decode("utf8")
+
+        msg_json = json.loads(msg_decoded)
+
+        return msg_json

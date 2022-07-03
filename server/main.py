@@ -17,11 +17,13 @@ s.listen(MAX_PLAYERS)
 
 players = {}
 
+
 def generate_id(player_list: dict, max_players: int):
     while True:
         unique_id = str(random.randint(1, max_players))
         if unique_id not in player_list:
             return unique_id
+
 
 def handle_messages(identifier: str):
     client_info = players[identifier]
@@ -38,23 +40,42 @@ def handle_messages(identifier: str):
             break
 
         msg_decoded = msg.decode("utf8")
-        try:
-            left_bracket_index = msg_decoded.index("{")
-            right_bracket_index = msg_decoded.index("}") + 1
-            msg_decoded = msg_decoded[left_bracket_index:right_bracket_index]
-        except ValueError:
-            continue
-        print(msg_decoded)
+        # try:
+        #     left_bracket_index = msg_decoded.index("{")
+        #     right_bracket_index = msg_decoded.index("}") + 1
+        #     msg_decoded = msg_decoded[left_bracket_index:right_bracket_index]
+        # except ValueError:
+        #     continue
         try:
             msg_json = json.loads(msg_decoded)
-            print(msg_json)
         except Exception as e:
             print(e)
             continue
 
         print(f"Received message from player {username} with ID {identifier}")
 
- 
+        if msg_json["object"] == "player":
+            players[identifier]["position"] = msg_json["position"]
+            players[identifier]["rotation"] = msg_json["rotation"]
+            players[identifier]["hp"] = msg_json["hp"]
+            players[identifier]["global_var"] = msg_json["global_var"]
+            players[identifier]["weapons"] = msg_json["weapons"]
+            players[identifier]["current_weapon"] = msg_json["current_weapon"]
+
+        print(players[identifier])
+
+        # Tell other players about player moving
+        for player_id in players:
+            if player_id != identifier:
+                player_info = players[player_id]
+                player_conn: socket.socket = player_info["socket"]
+                try:
+                    player_conn.sendall(msg_decoded.encode("utf8"))
+                except OSError:
+                    pass
+
+        #TODO Tell other players about player leaving
+        
     print(f"Player {username} with ID {identifier} has left the game...")
     del players[identifier]
     conn.close()
@@ -68,10 +89,25 @@ def main():
         conn, addr = s.accept()
         new_id = generate_id(players, MAX_PLAYERS)
         conn.send(new_id.encode("utf8"))
-        username = conn.recv(MSG_SIZE).decode("utf8")
-        new_player_info = {"socket": conn, "username": username, "position": (0, 1, 0), "rotation": 0, "health": 100}
 
-        print(new_player_info)
+        username = conn.recv(MSG_SIZE).decode("utf8")
+
+        new_player_info = {
+            "socket": conn,
+            "username": username,
+            "position": (0, 1, 0),
+            "rotation": 0,
+            "global_var": {
+                "Crouch": False,
+                "Running": False,
+                "Reload": False,
+                "Aiming": False,
+                "Shooting": False,
+                "Build": False, },
+            "hp": 100,
+            "weapons": [],
+            "current_weapon": 0}
+
 
         # Tell existing players about new player
         for player_id in players:
@@ -84,9 +120,10 @@ def main():
                         "object": "player",
                         "username": new_player_info["username"],
                         "position": new_player_info["position"],
-                        "health": new_player_info["health"],
+                        "hp": new_player_info["hp"],
                         "joined": True,
                         "left": False
+
                     }).encode("utf8"))
                 except OSError:
                     pass
@@ -101,7 +138,7 @@ def main():
                         "object": "player",
                         "username": player_info["username"],
                         "position": player_info["position"],
-                        "health": player_info["health"],
+                        "hp": player_info["hp"],
                         "joined": True,
                         "left": False
                     }).encode("utf8"))
@@ -113,10 +150,11 @@ def main():
         players[new_id] = new_player_info
 
         # Start thread to receive messages from client
-        msg_thread = threading.Thread(target=handle_messages, args=(new_id,), daemon=True)
+        msg_thread = threading.Thread(
+            target=handle_messages, args=(new_id,), daemon=True)
         msg_thread.start()
-        print(players)
         print(f"New connection from {addr}, assigned ID: {new_id}...")
+
 
 if __name__ == "__main__":
     try:
