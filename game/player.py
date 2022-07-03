@@ -32,7 +32,7 @@ class Player(FirstPersonController):
 
     def player_to_dict(self):
         resultat = {
-            "position": (self.world_x, self.world_y, self.world_z),
+            "position": (self.world_x, round(self.world_y,4), self.world_z),
             "rotation": self.rotation_y,
             "global_var": {
                 "Crouch": self.global_var.Crouch,

@@ -9,12 +9,12 @@ app = Ursina(fullscreen=False, vsync=False)
 window.borderless = False 
 
 from player import *
+from enemy import Enemy
 from particleSystem import *
 window.title = "FPS Ursina"
 
 main_player = Enginer(Vec3(5, 0, 0))
-prev_pos = main_player.world_position
-prev_dir = main_player.world_rotation_y
+prev_main_player = main_player.player_to_dict()
 enemies = []
 
 # username = input("Enter your username: ")
@@ -53,35 +53,6 @@ while True:
         break
 
 
-class Enemy(Entity):
-    def __init__(self, position: Vec3, identifier: str, username: str):
-        super().__init__(
-            position=position,
-            model='cube',
-            collider='box',
-            shader=lit_with_shadows_shader,
-            scale_y=2,
-            origin_y=-.5,
-            color=color.light_gray,
-        )
-        self.hp = 100
-        self.id = identifier
-        self.username = username
-
-        self.name_tag = Text(
-            parent=self,
-            text=username,
-            position=Vec3(0, 1.3, 0),
-            scale=Vec2(5, 3),
-            billboard=True,
-            origin=Vec2(0, 0)
-        )
-
-    def hit(self, damage, target):
-        print(target, "hit", self, "damage:", damage)
-        self.hp -= damage
-        if self.hp <= 0:
-            destroy(self)
 
 def receive():
     while True:
@@ -130,32 +101,36 @@ sky_texture = load_texture('assets/skybox.png')
 arm_texture = load_texture('assets/arm_texture.png')
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
 
+in_game = True
 
 def input(key):
+
     if key == 'escape':
-        mouse.locked = False
-        mouse.visible = True
+        global in_game
+
+        if in_game:
+            mouse.locked = False
+            mouse.visible = True
+            in_game = False
+            main_player.enabled = False
+        else:
+            main_player.enabled = True
+            mouse.locked = True
+            mouse.visible = False
+            in_game = True
+
     if key == 'q':
         quit()
 
 def update():
     if main_player.hp > 0:
-        global prev_pos, prev_dir
+        global prev_main_player
         
-        if prev_pos != round(main_player.world_position) or prev_dir != round(main_player.world_rotation_y):
+        if prev_main_player != main_player.player_to_dict():
             n.send_player(main_player)
-            prev_pos = round(main_player.world_position)
-            prev_dir = round(main_player.world_rotation_y)
+            print(prev_main_player)
 
-# def update():
-#     if player.health > 0:
-#         global prev_pos, prev_dir
-
-#         if prev_pos != player.world_position or prev_dir != player.world_rotation_y:
-#             n.send_player(player)
-
-#         prev_pos = player.world_position
-#         prev_dir = player.world_rotation_y
+        prev_main_player = main_player.player_to_dict()
 
 
 class Bullet(Entity):
@@ -224,8 +199,9 @@ class Sky(Entity):
 #         Voxel((x, 0, z))
 
 plane = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
-#player.collider = BoxCollider(player, Vec3(0,1,0), Vec3(1,2,1))
 
+
+enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska kurwa")
 pivot = Entity()
 DirectionalLight(parent=pivot, y=4, z=4, shadows=True, rotation=(45, -45, 45))
 
