@@ -1,8 +1,7 @@
 from ursina import *
-from particleSystem import *
-from player import *
-from globalVar import *
+from particleSystem import ParticleSystem
 from ursina.shaders import lit_with_shadows_shader
+
 
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
 ak_47_obj = 'assets/gun/ak_47.obj'
@@ -87,18 +86,11 @@ class Wepon(Entity):
                 ignore=(self.who,))
 
             if ray.hit:
-                print(type(ray.entities[-1]).__name__ == 'Enemy')
+                print(ray.entities[-1]._parent.__class__.__name__)
                 ParticleSystem(position=ray.world_point, number=10, speed=1, duration=0.03)        
-                if type(ray.entities[-1]).__name__ == 'Enemy':   
-                    ray.entities[-1].hit(self.damage, target=self)
+                if ray.entities[-1]._parent.__class__.__name__ == "Enemy":
+                    ray.entities[-1]._parent.hit(self.damage, target=self)
 
-            # if ray.hit:
-            #     print(type(ray.entities[-1]).__name__ == 'Enemy')
-            #     ParticleSystem(position=ray.world_point, number=10, speed=1, duration=0.03)        
-            #     try:
-            #          ray.entities[-1].hit(self.damage, target=self)
-            #     except Exception:
-            #         print("nothing")
 
             Audio(self.audio_shot, volume=0.02)
             self.amo -= 1

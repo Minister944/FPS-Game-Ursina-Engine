@@ -6,3 +6,7 @@ class globalVariable():
         self.Aiming = False
         self.Shooting = False
         self.Build = False
+
+def initialize(): 
+    global n 
+    n = None

@@ -32,7 +32,6 @@ class Network:
             "left": False,
         }
         player_info = dict(player_info, **player.player_to_dict())
-
         player_info_encoded = json.dumps(player_info).encode("utf8")
         try:
             self.client.send(player_info_encoded)
@@ -53,3 +52,18 @@ class Network:
         msg_json = json.loads(msg_decoded)
 
         return msg_json
+
+    def hit(self, target_id: str, damage: int, kill: bool = False):
+        hit_info = {
+            "object": "hit",
+            "id": self.id,
+            "target_id": target_id,
+            "damage": damage,
+            "kill": kill,
+        }
+
+        hit_info_encoded = json.dumps(hit_info).encode("utf8")
+        try:
+            self.client.send(hit_info_encoded)
+        except socket.error as e:
+            print(e)

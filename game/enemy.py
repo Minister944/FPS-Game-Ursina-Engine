@@ -1,5 +1,8 @@
-from ursina import Entity, Text, Vec2, Vec3, color,load_texture
+from ursina import Entity, Text, Vec2, Vec3, color, destroy
 from ursina.shaders import lit_with_shadows_shader
+
+import globalVar
+from weapon import ACP_Smith_obj, ACP_Smith_texture, ak_47_obj, ak_47_texture
 
 
 class Enemy(Entity):
@@ -9,7 +12,24 @@ class Enemy(Entity):
         self.hp = 100
         self.id = identifier
         self.username = username
-
+        self.global_var = globalVar.globalVariable()
+        self.current_weapon_old = 0
+        self.current_weapon = 0
+        self.weapons = [
+            Entity(parent=self,
+                   model=ak_47_obj,
+                   texture=ak_47_texture,
+                   scale=0.5,
+                   rotation=Vec3(2, 88, 1),
+                   position=Vec3(0.6, 1.4, 0.85),),
+            Entity(parent=self,
+                   model=ACP_Smith_obj,
+                   texture=ACP_Smith_texture,
+                   scale=0.5,
+                   rotation=Vec3(2, 88, 1),
+                   position=Vec3(0.6, 1.4, 0.85),),
+        ]
+        #TODO
         self.name_tag = Text(
             parent=self,
             text=username,
@@ -25,13 +45,10 @@ class Enemy(Entity):
             scale=Vec3(0.6, 0.6, 0.6),
             model="cube",
             collider="box",
-            color=color.pink,
-            texture="brick"
+            texture='brick'
         )
 
-
-        #TODO texture face ...
-
+        # TODO texture face ...
 
         self.body = Entity(
             parent=self,
@@ -78,9 +95,24 @@ class Enemy(Entity):
             color=color.light_gray
         )
 
+    def hit(self, damage, target):
+        print(target, "hit", self, "damage:", damage)
+        self.hp -= damage
+        if self.hp <= 0:
+            globalVar.n.hit(target_id=self.id, damage=damage, kill=True)
+            destroy(self)
+            return
+        globalVar.n.hit(target_id=self.id, damage=damage)
 
-    # def hit(self, damage, target):
-    #     print(target, "hit", self, "damage:", damage)
-    #     self.hp -= damage
-    #     if self.hp <= 0:
-    #         destroy(self)
+    def update(self):
+
+        if self.current_weapon_old != self.current_weapon:
+            self.current_weapon_old = self.current_weapon
+            self.switch_weapon()
+
+    def switch_weapon(self):
+        for i, v in enumerate(self.weapons):
+            if i == self.current_weapon:
+                v.enabled = True
+            else:
+                v.enabled = False

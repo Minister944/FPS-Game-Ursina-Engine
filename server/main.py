@@ -6,7 +6,7 @@ import threading
 
 
 ADDR = "0.0.0.0"
-PORT = 1024
+PORT = 1026
 MAX_PLAYERS = 10
 MSG_SIZE = 2048
 
@@ -16,6 +16,17 @@ s.bind((ADDR, PORT))
 s.listen(MAX_PLAYERS)
 
 players = {}
+
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
 
 
 def generate_id(player_list: dict, max_players: int):
@@ -62,9 +73,15 @@ def handle_messages(identifier: str):
             players[identifier]["weapons"] = msg_json["weapons"]
             players[identifier]["current_weapon"] = msg_json["current_weapon"]
 
-        print(players[identifier])
+        if msg_json["object"] == "hit":
+            print(f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}")
+            players[msg_json["target_id"]]["hp"] -= msg_json["damage"]
+            
+            
 
-        # Tell other players about player moving
+        print(bcolors.OKBLUE + str(players[identifier]) + bcolors.ENDC)
+
+        # Tell other players about player changen
         for player_id in players:
             if player_id != identifier:
                 player_info = players[player_id]
@@ -74,8 +91,16 @@ def handle_messages(identifier: str):
                 except OSError:
                     pass
 
-        #TODO Tell other players about player leaving
-        
+    # Tell other players about player leaving
+    for player_id in players:
+        if player_id != identifier:
+            player_info = players[player_id]
+            player_conn: socket.socket = player_info["socket"]
+            try:
+                player_conn.send(json.dumps({"id": identifier, "object": "player", "joined": False, "left": True}).encode("utf8"))
+            except OSError:
+                pass
+
     print(f"Player {username} with ID {identifier} has left the game...")
     del players[identifier]
     conn.close()
@@ -107,7 +132,6 @@ def main():
             "hp": 100,
             "weapons": [],
             "current_weapon": 0}
-
 
         # Tell existing players about new player
         for player_id in players:

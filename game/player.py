@@ -1,7 +1,8 @@
 from ursina import *
-from weapon import *
+from weapon import ak_47, ACP_Smith, Prefabs
 from ursina.prefabs.first_person_controller import FirstPersonController
-from globalVar import *
+from globalVar import globalVariable
+from ursina.shaders import lit_with_shadows_shader
 
 
 class Player(FirstPersonController):

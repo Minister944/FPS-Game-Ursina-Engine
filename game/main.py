@@ -1,42 +1,48 @@
 from ursina import *
-from ursina.shaders import lit_with_shadows_shader
 
 import threading
 import socket
 from network import Network
+from random import random
 
 app = Ursina(fullscreen=False, vsync=False)
+
+window.windowed_size = 1.3
+window.title = "FPS Ursina"
 window.borderless = False 
 
-from player import *
+from player import Player,Enginer,Medic
 from enemy import Enemy
-from particleSystem import *
-window.title = "FPS Ursina"
+from particleSystem import ParticleSystem
+import globalVar
+
+globalVar.initialize()
 
 main_player = Enginer(Vec3(5, 0, 0))
 prev_main_player = main_player.player_to_dict()
 enemies = []
 
 # username = input("Enter your username: ")
-username = "Kacper"
+
+username = "Kacper"+ str(random())
 while True:
     # server_addr = input("Enter server IP: ")
     # server_port = input("Enter server port: ")
     server_addr = "0.0.0.0"
-    server_port = 1024
+    server_port = 1026
     try:
         server_port = int(server_port)
     except ValueError:
         print("\nThe port you entered was not a number, try again with a valid port...")
         continue
 
-    n = Network(server_addr, server_port, username)
-    n.settimeout(5)
+    globalVar.n = Network(server_addr, server_port, username)
+    globalVar.n.settimeout(5)
 
     error_occurred = False
 
     try:
-        n.connect()
+        globalVar.n.connect()
     except ConnectionRefusedError:
         print("\nConnection refused! This can be because server hasn't started or has reached it's player limit.")
         # error_occurred = True
@@ -47,7 +53,7 @@ while True:
         print("\nThe IP address you entered is invalid, please try again with a valid address...")
         # error_occurred = True
     finally:
-        n.settimeout(None)
+        globalVar.n.settimeout(None)
 
     if not error_occurred:
         break
@@ -57,7 +63,7 @@ while True:
 def receive():
     while True:
         try:
-            info = n.receive_info()
+            info = globalVar.n.receive_info()
         except Exception as e:
             print(e)
             continue
@@ -87,8 +93,10 @@ def receive():
 
             enemy.world_position = Vec3(*info["position"])
             enemy.rotation_y = info["rotation"]
+            enemy.current_weapon = info["current_weapon"]
 
-        print(info)
+        if info["object"] != "player":
+            print(info)
 
 msg_thread = threading.Thread(target=receive, daemon=True)
 msg_thread.start()
@@ -127,8 +135,7 @@ def update():
         global prev_main_player
         
         if prev_main_player != main_player.player_to_dict():
-            n.send_player(main_player)
-            print(prev_main_player)
+            globalVar.n.send_player(main_player)
 
         prev_main_player = main_player.player_to_dict()
 
@@ -201,7 +208,7 @@ class Sky(Entity):
 plane = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
 
 
-enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska kurwa")
+# enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska kurwa")
 pivot = Entity()
 DirectionalLight(parent=pivot, y=4, z=4, shadows=True, rotation=(45, -45, 45))
 
