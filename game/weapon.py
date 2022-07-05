@@ -13,6 +13,7 @@ ACP_Smith_obj = 'assets/gun/ACP_Smith.obj'
 ACP_Smith_audio_shot = 'assets/lututu.wav'
 ACP_Smith_audio_reload = 'assets/gun-reload-sound-fx_C_minor'
 
+
 class Wepon(Entity):
     def __init__(self,
                  add_to_scene_entities=True,
@@ -38,7 +39,7 @@ class Wepon(Entity):
 
         self.audio_shot = ak_47_audio_shot
         self.audio_reload = ak_47_audio_reload
-        #TODO self.texture
+        # TODO self.texture
 
     def on_enable(self):
         try:
@@ -54,7 +55,8 @@ class Wepon(Entity):
         elif self.global_var.Shooting and not held_keys['left mouse']:
             self.global_var.Shooting = False
         elif not self.global_var.Reload and held_keys['r'] and self.magazine > 0 and time.time() - self.startReload > self.reloadTime:
-            self.animate_rotation(value=Vec3(0, 50, 0), duration=self.reloadTime/2)
+            self.animate_rotation(value=Vec3(0, 50, 0),
+                                  duration=self.reloadTime/2)
             self.global_var.Reload = True
             self.startReload = time.time()
             self.reload()
@@ -87,10 +89,10 @@ class Wepon(Entity):
 
             if ray.hit:
                 print(ray.entities[-1]._parent.__class__.__name__)
-                ParticleSystem(position=ray.world_point, number=10, speed=1, duration=0.03)        
+                ParticleSystem(position=ray.world_point,
+                               number=10, speed=1, duration=0.03)
                 if ray.entities[-1]._parent.__class__.__name__ == "Enemy":
                     ray.entities[-1]._parent.hit(self.damage, target=self)
-
 
             Audio(self.audio_shot, volume=0.02)
             self.amo -= 1
@@ -117,7 +119,7 @@ class Wepon(Entity):
             self.animate_position(value=Vec3(0, -0.5, -0.07), duration=0.07)
             self.animate_rotation(value=Vec3(0, 90, 0), duration=0.07)
             # self.rotation = Vec3(0, 90, 0)
-            # self.position = Vec3(0, -0.5, -0.07)
+            # self.position = Vec3(0, -0.5(, -0.07)
         else:
             self.animate_position(value=Vec3(0.6, -0.7, 0.85), duration=0.07)
             self.animate_rotation(value=Vec3(2, 88, 1), duration=0.07)
@@ -168,6 +170,7 @@ class ACP_Smith(Wepon):
         rotation_y -= self.recoil * (random.randint(-3, 3)/100)
         v1, v2, v3 = forward
         return v1, v2, v3, rotation_x, rotation_y
+
 
 class Prefabs(Entity):
     def __init__(self, **kwargs):

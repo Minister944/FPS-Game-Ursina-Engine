@@ -1,8 +1,32 @@
+from cgitb import enable
 from ursina import Entity, Text, Vec2, Vec3, color, destroy
 from ursina.shaders import lit_with_shadows_shader
 
 import globalVar
 from weapon import ACP_Smith_obj, ACP_Smith_texture, ak_47_obj, ak_47_texture
+
+
+class EnemyWeapon_AK_47(Entity):
+    def __init__(self, who=None):
+        super().__init__(
+            model=ak_47_obj,
+            texture=ak_47_texture,
+            scale=0.45,
+            rotation=Vec3(2, 88, 1),
+            position=Vec3(0.6, 1.4, 0.85),
+            parent=who,
+            enabled=False)
+
+class EnemyWeapon_ACP_Smith(Entity):
+    def __init__(self, who=None):
+        super().__init__(
+            model=ACP_Smith_obj,
+            texture=ACP_Smith_texture,
+            scale=0.45,
+            rotation=Vec3(2, 88, 1),
+            position=Vec3(0.6, 1.4, 0.85),
+            parent=who,
+            enabled=False)
 
 
 class Enemy(Entity):
@@ -13,23 +37,13 @@ class Enemy(Entity):
         self.id = identifier
         self.username = username
         self.global_var = globalVar.globalVariable()
+
         self.current_weapon_old = 0
         self.current_weapon = 0
-        self.weapons = [
-            Entity(parent=self,
-                   model=ak_47_obj,
-                   texture=ak_47_texture,
-                   scale=0.5,
-                   rotation=Vec3(2, 88, 1),
-                   position=Vec3(0.6, 1.4, 0.85),),
-            Entity(parent=self,
-                   model=ACP_Smith_obj,
-                   texture=ACP_Smith_texture,
-                   scale=0.5,
-                   rotation=Vec3(2, 88, 1),
-                   position=Vec3(0.6, 1.4, 0.85),),
-        ]
-        #TODO
+        self.weapons = [EnemyWeapon_AK_47(
+            who=self), EnemyWeapon_ACP_Smith(who=self)]
+        self.weapons[0].enabled = True
+
         self.name_tag = Text(
             parent=self,
             text=username,
@@ -49,6 +63,7 @@ class Enemy(Entity):
         )
 
         # TODO texture face ...
+        #TODO fix only hit head working
 
         self.body = Entity(
             parent=self,

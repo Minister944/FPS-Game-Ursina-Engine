@@ -9,7 +9,7 @@ app = Ursina(fullscreen=False, vsync=False)
 
 window.windowed_size = 1.3
 window.title = "FPS Ursina"
-window.borderless = False 
+window.borderless = False
 
 from player import Player,Enginer,Medic
 from enemy import Enemy
@@ -23,8 +23,12 @@ prev_main_player = main_player.player_to_dict()
 enemies = []
 
 # username = input("Enter your username: ")
+username = "Kacper" + str(random())
+#TODO scope change fov
+#TODO all animation runing scope ...
+#TODO up down
 
-username = "Kacper"+ str(random())
+
 while True:
     # server_addr = input("Enter server IP: ")
     # server_port = input("Enter server port: ")
@@ -59,7 +63,6 @@ while True:
         break
 
 
-
 def receive():
     while True:
         try:
@@ -76,7 +79,8 @@ def receive():
             enemy_id = info["id"]
 
             if info["joined"]:
-                new_enemy = Enemy(Vec3(*info["position"]), enemy_id, info["username"])
+                new_enemy = Enemy(
+                    Vec3(*info["position"]), enemy_id, info["username"])
                 new_enemy.health = info["hp"]
                 enemies.append(new_enemy)
                 continue
@@ -98,6 +102,7 @@ def receive():
         if info["object"] != "player":
             print(info)
 
+
 msg_thread = threading.Thread(target=receive, daemon=True)
 msg_thread.start()
 
@@ -110,6 +115,7 @@ arm_texture = load_texture('assets/arm_texture.png')
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
 
 in_game = True
+
 
 def input(key):
 
@@ -130,66 +136,15 @@ def input(key):
     if key == 'q':
         quit()
 
+
 def update():
     if main_player.hp > 0:
         global prev_main_player
-        
+
         if prev_main_player != main_player.player_to_dict():
             globalVar.n.send_player(main_player)
 
         prev_main_player = main_player.player_to_dict()
-
-
-class Bullet(Entity):
-    def __init__(self, distance=50, lifetime=10, **kwargs):
-        super().__init__(**kwargs)
-        self.distance = distance
-        self.lifetime = lifetime
-        self.start = time.time()
-
-    def update(self, **kwargs):
-        ray = raycast(self.world_position, self.forward,
-                      distance=self.distance, ignore=(self, main_player))
-        if not ray.hit and time.time() - self.start < self.lifetime:
-            self.world_position += self.forward * self.distance * time.dt
-        else:
-            destroy(self)
-        if ray.hit:
-            ParticleSystem(position=ray.world_point,
-                           number=10, speed=1, duration=0.03)
-            try:
-                ray.entities[-1].hit(damage=20, target=None)
-            except:
-                print("nothing method")
-            destroy(self)
-
-
-
-class Voxel(Button):
-    def __init__(self, position=(0, 0, 0), texture=grass_texture):
-        super().__init__(
-            parent=scene,
-            position=position,
-            model='assets/block',
-            origin_y=0.5,
-            texture=texture,
-            color=color.color(0, 0, random.uniform(0.9, 1)),
-            scale=0.5,)
-
-    # def input(self, key):
-    #     if self.hovered:
-    #         if key == 'left mouse down':
-    #             if block_pick == 3:
-    #                 voxel = Voxel(position=self.position +
-    #                               mouse.normal, texture=stone_texture)
-    #             if block_pick == 4:
-    #                 voxel = Voxel(position=self.position +
-    #                               mouse.normal, texture=brick_texture)
-    #             if block_pick == 5:
-    #                 voxel = Voxel(position=self.position +
-    #                               mouse.normal, texture=dirt_texture)
-    #         if key == 'right mouse down':
-    #             destroy(self)
 
 
 class Sky(Entity):
@@ -201,14 +156,12 @@ class Sky(Entity):
             scale=150,
             double_sided=True)
 
-# for x in range(16):
-#     for z in range(16):
-#         Voxel((x, 0, z))
 
-plane = Entity(model='plane', collider='box', scale=64, texture='grass', texture_scale=(4,4))
+plane = Entity(model='plane', collider='box', scale=64,
+               texture='grass', texture_scale=(4, 4))
 
 
-# enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska kurwa")
+#enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska ku***")
 pivot = Entity()
 DirectionalLight(parent=pivot, y=4, z=4, shadows=True, rotation=(45, -45, 45))
 
