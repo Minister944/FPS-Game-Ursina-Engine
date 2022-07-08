@@ -1,4 +1,3 @@
-from cgitb import enable
 from ursina import Entity, Text, Vec2, Vec3, color, destroy
 from ursina.shaders import lit_with_shadows_shader
 
@@ -114,10 +113,10 @@ class Enemy(Entity):
         print(target, "hit", self, "damage:", damage)
         self.hp -= damage
         if self.hp <= 0:
-            globalVar.n.hit(target_id=self.id, damage=damage, kill=True)
+            globalVar.connection.hit(target_id=self.id, damage=damage, kill=True)
             destroy(self)
             return
-        globalVar.n.hit(target_id=self.id, damage=damage)
+        globalVar.connection.hit(target_id=self.id, damage=damage)
 
     def update(self):
 

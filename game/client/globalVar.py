@@ -8,5 +8,5 @@ class globalVariable():
         self.Build = False
 
 def initialize(): 
-    global n 
-    n = None
+    global connection # netwoek connect
+    connection = None

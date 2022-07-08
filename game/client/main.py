@@ -6,29 +6,27 @@ from network import Network
 from random import random
 
 app = Ursina(fullscreen=False, vsync=False)
-
 window.windowed_size = 1.3
-window.title = "FPS Ursina"
+window.title = "FPS Ursina Multiplayer"
 window.borderless = False
 
 from player import Player,Enginer,Medic
 from enemy import Enemy
-from particleSystem import ParticleSystem
+from maps import Map
 import globalVar
 
 globalVar.initialize()
 
 main_player = Enginer(Vec3(5, 0, 0))
+
 prev_main_player = main_player.player_to_dict()
 enemies = []
+in_game = True
 
 # username = input("Enter your username: ")
 username = "Kacper" + str(random())
 #TODO scope change fov
-#TODO all animation runing scope ...
-#TODO up down
-
-
+#connect to server and negotiating map, class
 while True:
     # server_addr = input("Enter server IP: ")
     # server_port = input("Enter server port: ")
@@ -40,13 +38,13 @@ while True:
         print("\nThe port you entered was not a number, try again with a valid port...")
         continue
 
-    globalVar.n = Network(server_addr, server_port, username)
-    globalVar.n.settimeout(5)
+    globalVar.connection = Network(server_addr, server_port, username)
+    globalVar.connection.settimeout(5)
 
     error_occurred = False
 
     try:
-        globalVar.n.connect()
+        globalVar.connection.connect()
     except ConnectionRefusedError:
         print("\nConnection refused! This can be because server hasn't started or has reached it's player limit.")
         # error_occurred = True
@@ -57,16 +55,16 @@ while True:
         print("\nThe IP address you entered is invalid, please try again with a valid address...")
         # error_occurred = True
     finally:
-        globalVar.n.settimeout(None)
+        globalVar.connection.settimeout(None)
 
     if not error_occurred:
         break
 
-
+# receive data and processing
 def receive():
     while True:
         try:
-            info = globalVar.n.receive_info()
+            info = globalVar.connection.receive_info()
         except Exception as e:
             print(e)
             continue
@@ -106,16 +104,6 @@ def receive():
 msg_thread = threading.Thread(target=receive, daemon=True)
 msg_thread.start()
 
-grass_texture = load_texture('assets/grass_block.png')
-stone_texture = load_texture('assets/stone_block.png')
-brick_texture = load_texture('assets/brick_block.png')
-dirt_texture = load_texture('assets/dirt_block.png')
-sky_texture = load_texture('assets/skybox.png')
-arm_texture = load_texture('assets/arm_texture.png')
-ak_47_texture = load_texture('assets/gun/Tix_1.png')
-
-in_game = True
-
 
 def input(key):
 
@@ -142,28 +130,13 @@ def update():
         global prev_main_player
 
         if prev_main_player != main_player.player_to_dict():
-            globalVar.n.send_player(main_player)
+            globalVar.connection.send_player(main_player)
 
         prev_main_player = main_player.player_to_dict()
 
 
-class Sky(Entity):
-    def __init__(self):
-        super().__init__(
-            parent=scene,
-            model='sphere',
-            texture=sky_texture,
-            scale=150,
-            double_sided=True)
-
-
-plane = Entity(model='plane', collider='box', scale=64,
-               texture='grass', texture_scale=(4, 4))
-
-
 #enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska ku***")
-pivot = Entity()
-DirectionalLight(parent=pivot, y=4, z=4, shadows=True, rotation=(45, -45, 45))
 
-
+map = Map()
+map.load_map("test")
 app.run()

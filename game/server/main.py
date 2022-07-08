@@ -4,6 +4,8 @@ import time
 import random
 import threading
 
+# TODO in progres load map
+# from .client.maps import Test
 
 ADDR = "0.0.0.0"
 PORT = 1026
@@ -11,11 +13,13 @@ MAX_PLAYERS = 10
 MSG_SIZE = 2048
 
 # Setup server socket
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((ADDR, PORT))
-s.listen(MAX_PLAYERS)
+connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connection.bind((ADDR, PORT))
+connection.listen(MAX_PLAYERS)
 
 players = {}
+# maps = {"test": {Test.spawn_places()}}
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -74,10 +78,9 @@ def handle_messages(identifier: str):
             players[identifier]["current_weapon"] = msg_json["current_weapon"]
 
         if msg_json["object"] == "hit":
-            print(f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}")
+            print(
+                f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}")
             players[msg_json["target_id"]]["hp"] -= msg_json["damage"]
-            
-            
 
         print(bcolors.OKBLUE + str(players[identifier]) + bcolors.ENDC)
 
@@ -97,7 +100,8 @@ def handle_messages(identifier: str):
             player_info = players[player_id]
             player_conn: socket.socket = player_info["socket"]
             try:
-                player_conn.send(json.dumps({"id": identifier, "object": "player", "joined": False, "left": True}).encode("utf8"))
+                player_conn.send(json.dumps(
+                    {"id": identifier, "object": "player", "joined": False, "left": True}).encode("utf8"))
             except OSError:
                 pass
 
@@ -111,7 +115,7 @@ def main():
 
     while True:
         # Accept new connection and assign unique ID
-        conn, addr = s.accept()
+        conn, addr = connection.accept()
         new_id = generate_id(players, MAX_PLAYERS)
         conn.send(new_id.encode("utf8"))
 
@@ -121,8 +125,7 @@ def main():
             "socket": conn,
             "username": username,
             "position": (0, 1, 0),
-            "rotation": 0,
-            "global_var": {
+            "rotation": 0, "global_var": {
                 "Crouch": False,
                 "Running": False,
                 "Reload": False,
@@ -189,4 +192,4 @@ if __name__ == "__main__":
         pass
     finally:
         print("Exiting")
-        s.close()
+        connection.close()
