@@ -3,22 +3,9 @@ import json
 import time
 import random
 import threading
-
-# TODO in progres load map
-# from .client.maps import Test
-
-ADDR = "0.0.0.0"
-PORT = 1026
-MAX_PLAYERS = 10
-MSG_SIZE = 2048
-
-# Setup server socket
-connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-connection.bind((ADDR, PORT))
-connection.listen(MAX_PLAYERS)
-
-players = {}
-# maps = {"test": {Test.spawn_places()}}
+# you have to set
+# export PYTHONPATH=/home/USERNAME/Desktop/ursina_engine
+from game.client.maps import Map, Test
 
 
 class bcolors:
@@ -32,6 +19,28 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+
+ADDR = "0.0.0.0"
+PORT = 1026
+MAX_PLAYERS = 10
+MSG_SIZE = 2048
+
+# Setup server socket
+connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connection.bind((ADDR, PORT))
+connection.listen(MAX_PLAYERS)
+
+players = {}
+maps = {}
+
+print(bcolors.OKGREEN + "MAP:" + bcolors.ENDC)
+for map in Map.list_map():
+    map_info = map.map_info()
+    maps[map_info["name"]] = map_info
+    print(bcolors.OKGREEN + " - "+map_info["name"] + " (" +map_info["description"] +")"+ bcolors.ENDC)
+
+current_map = random.choice(list(maps.values()))
+print(current_map)
 
 def generate_id(player_list: dict, max_players: int):
     while True:
@@ -117,7 +126,10 @@ def main():
         # Accept new connection and assign unique ID
         conn, addr = connection.accept()
         new_id = generate_id(players, MAX_PLAYERS)
-        conn.send(new_id.encode("utf8"))
+        ######conn.send(new_id.encode("utf8"))
+        
+        # newid 
+        # map 
 
         username = conn.recv(MSG_SIZE).decode("utf8")
 

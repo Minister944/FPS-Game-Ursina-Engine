@@ -12,7 +12,7 @@ window.borderless = False
 
 from player import Player,Enginer,Medic
 from enemy import Enemy
-from maps import Map
+from maps import Test
 import globalVar
 
 globalVar.initialize()
@@ -137,6 +137,5 @@ def update():
 
 #enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska ku***")
 
-map = Map()
-map.load_map("test")
+map = Test()
 app.run()
