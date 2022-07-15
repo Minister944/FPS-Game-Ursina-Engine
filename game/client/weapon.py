@@ -1,8 +1,7 @@
 from ursina import *
-from particleSystem import *
-from player import *
-from globalVar import *
+from particleSystem import ParticleSystem
 from ursina.shaders import lit_with_shadows_shader
+
 
 ak_47_texture = load_texture('assets/gun/Tix_1.png')
 ak_47_obj = 'assets/gun/ak_47.obj'
@@ -13,6 +12,7 @@ ACP_Smith_texture = load_texture('assets/gun/ACP_Smith.jpg')
 ACP_Smith_obj = 'assets/gun/ACP_Smith.obj'
 ACP_Smith_audio_shot = 'assets/lututu.wav'
 ACP_Smith_audio_reload = 'assets/gun-reload-sound-fx_C_minor'
+
 
 class Wepon(Entity):
     def __init__(self,
@@ -35,12 +35,15 @@ class Wepon(Entity):
         self.startHit = time.time()
         self.startReload = time.time()
         self.who = who
-        self.who.gui(self.amo, self.magazine)
-        #TODO add self.audio ... self.obj self.texture
+        self.who.update_hud(self.amo, self.magazine)
+
+        self.audio_shot = ak_47_audio_shot
+        self.audio_reload = ak_47_audio_reload
+        # TODO self.texture
 
     def on_enable(self):
         try:
-            self.who.gui(self.amo, self.magazine)
+            self.who.update_hud(self.amo, self.magazine)
         except:
             pass
 
@@ -52,7 +55,8 @@ class Wepon(Entity):
         elif self.global_var.Shooting and not held_keys['left mouse']:
             self.global_var.Shooting = False
         elif not self.global_var.Reload and held_keys['r'] and self.magazine > 0 and time.time() - self.startReload > self.reloadTime:
-            self.animate_rotation(value=Vec3(0, 50, 0), duration=self.reloadTime/2)
+            self.animate_rotation(value=Vec3(0, 50, 0),
+                                  duration=self.reloadTime/2)
             self.global_var.Reload = True
             self.startReload = time.time()
             self.reload()
@@ -84,22 +88,15 @@ class Wepon(Entity):
                 ignore=(self.who,))
 
             if ray.hit:
-                print(type(ray.entities[-1]).__name__ == 'Enemy')
-                ParticleSystem(position=ray.world_point, number=10, speed=1, duration=0.03)        
-                if type(ray.entities[-1]).__name__ == 'Enemy':   
-                    ray.entities[-1].hit(self.damage, target=self)
+                print(ray.entities[-1]._parent.__class__.__name__)
+                ParticleSystem(position=ray.world_point,
+                               number=10, speed=1, duration=0.03)
+                if ray.entities[-1]._parent.__class__.__name__ == "Enemy":
+                    ray.entities[-1]._parent.hit(self.damage, target=self)
 
-            # if ray.hit:
-            #     print(type(ray.entities[-1]).__name__ == 'Enemy')
-            #     ParticleSystem(position=ray.world_point, number=10, speed=1, duration=0.03)        
-            #     try:
-            #          ray.entities[-1].hit(self.damage, target=self)
-            #     except Exception:
-            #         print("nothing")
-
-            Audio(ak_47_audio_shot, volume=0.02)
+            Audio(self.audio_shot, volume=0.02)
             self.amo -= 1
-            self.who.gui(self.amo, self.magazine)
+            self.who.update_hud(self.amo, self.magazine)
 
     def recoiling(self, forward, rotation_x, rotation_y):
         rotation_x -= self.recoil * (random.randint(33, 66)/100)
@@ -114,15 +111,15 @@ class Wepon(Entity):
         self.who.speed = 3
         self.magazine -= 1
         self.amo = self.maxAmo
-        Audio(ak_47_audio_reload, volume=0.1)
-        self.who.gui(self.amo, self.magazine)
+        Audio(self.audio_reload, volume=0.1)
+        self.who.update_hud(self.amo, self.magazine)
 
     def aiming(self):
         if self.global_var.Aiming:
             self.animate_position(value=Vec3(0, -0.5, -0.07), duration=0.07)
             self.animate_rotation(value=Vec3(0, 90, 0), duration=0.07)
             # self.rotation = Vec3(0, 90, 0)
-            # self.position = Vec3(0, -0.5, -0.07)
+            # self.position = Vec3(0, -0.5(, -0.07)
         else:
             self.animate_position(value=Vec3(0.6, -0.7, 0.85), duration=0.07)
             self.animate_rotation(value=Vec3(2, 88, 1), duration=0.07)
@@ -164,13 +161,16 @@ class ACP_Smith(Wepon):
         self.amo = self.maxAmo
         self.magazine = 8
         self.recoil = 20
-        self.who.gui(self.amo, self.magazine)
+        self.who.update_hud(self.amo, self.magazine)
+        self.audio_shot = ACP_Smith_audio_shot
+        self.audio_reload = ACP_Smith_audio_reload
 
     def recoiling(self, forward, rotation_x, rotation_y):
         rotation_x -= self.recoil * (random.randint(33, 66)/100)
         rotation_y -= self.recoil * (random.randint(-3, 3)/100)
         v1, v2, v3 = forward
         return v1, v2, v3, rotation_x, rotation_y
+
 
 class Prefabs(Entity):
     def __init__(self, **kwargs):

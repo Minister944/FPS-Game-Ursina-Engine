@@ -1,7 +1,8 @@
 from ursina import *
-from weapon import *
+from weapon import ak_47, ACP_Smith, Prefabs
 from ursina.prefabs.first_person_controller import FirstPersonController
-from globalVar import *
+from globalVar import globalVariable
+from ursina.shaders import lit_with_shadows_shader
 
 
 class Player(FirstPersonController):
@@ -16,7 +17,9 @@ class Player(FirstPersonController):
             speed=7
         )
         self.global_var = globalVariable()
+
         self.hp = 100
+
         self.text = Text(text="0/0", x=0.8, y=-0.45)
         self.hp = Text(text="<image:assets/NewImage-2>   " +
                        str(self.hp), x=-0.85, y=-0.45)
@@ -25,12 +28,29 @@ class Player(FirstPersonController):
         self.weapons[0].enabled = False
         self.weapons[0].enabled = True
 
-        self.cuurent_weapon = 0
+        self.current_weapon = 0
         self.switch_weapon()
+
+    def player_to_dict(self):
+        resultat = {
+            "position": (self.world_x, round(self.world_y,4), self.world_z),
+            "rotation": self.rotation_y,
+            "global_var": {
+                "Crouch": self.global_var.Crouch,
+                "Running": self.global_var.Running,
+                "Reload": self.global_var.Reload,
+                "Aiming": self.global_var.Crouch,
+                "Shooting": self.global_var.Crouch,
+                "Build": self.global_var.Crouch, },
+            "hp": self.hp,
+            "weapons": [type(wepon).__name__ for wepon in self.weapons],
+            "current_weapon": self.current_weapon,
+        }
+        return resultat
 
     def switch_weapon(self):
         for i, v in enumerate(self.weapons):
-            if i == self.cuurent_weapon:
+            if i == self.current_weapon:
                 v.enabled = True
             else:
                 v.enabled = False
@@ -50,20 +70,21 @@ class Player(FirstPersonController):
 
     def input(self, key):
         try:
-            self.cuurent_weapon = int(key) - 1
+            self.current_weapon = int(key) - 1
             self.switch_weapon()
         except ValueError:
             pass
 
         if key == "scroll up":
-            self.cuurent_weapon = (self.cuurent_weapon + 1) % len(self.weapons)
+            self.current_weapon = (self.current_weapon + 1) % len(self.weapons)
             self.switch_weapon()
         if key == "scroll down":
             self.switch_weapon()
-            self.cuurent_weapon = (self.cuurent_weapon - 1) % len(self.weapons)
+            self.current_weapon = (self.current_weapon - 1) % len(self.weapons)
+
         return super().input(key)
 
-    def gui(self, ammo, magazine):
+    def update_hud(self, ammo, magazine):
         self.text.text = str(ammo)+"/"+str(magazine)
 
 
@@ -74,21 +95,24 @@ class Enginer(Player):
         self.barrier = Prefabs()
         self.barrier_count = 3
         self.barrier_count_old = self.barrier_count
+
     def update(self):
-        if  held_keys['f'] and self.barrier_count > 0:
-            
+        if held_keys['f'] and self.barrier_count > 0:
+
             self.global_var.Build = True
             if self.barrier_count == self.barrier_count_old:
                 self.barrier.visible = True
 
-            ray = raycast(self.camera_pivot.world_position, self.camera_pivot.forward, distance=10, ignore=(self,))
+            ray = raycast(self.camera_pivot.world_position,
+                          self.camera_pivot.forward, distance=10, ignore=(self,))
             if ray.hit:
                 self.barrier.world_position = ray.world_point + Vec3(0, 0.5, 0)
                 if self.barrier_count == self.barrier_count_old and mouse.left:
                     self.barrier_count -= 1
-                    e = Entity(model='cube', color=color.orange, position=ray.world_point + Vec3(0, 0.5, 0), collider='box', shader=lit_with_shadows_shader)
+                    e = Entity(model='cube', color=color.orange, position=ray.world_point +
+                               Vec3(0, 0.5, 0), collider='box', shader=lit_with_shadows_shader)
                     self.barrier.visible = False
-            
+
         else:
             self.barrier_count_old = self.barrier_count
             self.barrier.visible = False
