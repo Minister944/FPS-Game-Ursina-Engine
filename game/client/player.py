@@ -14,17 +14,20 @@ class Player(FirstPersonController):
             jump_duration=0.4,
             origin_y=-1,
             collider="box",
-            speed=7
+            speed=7,
         )
         self.global_var = globalVariable()
 
         self.hp = 100
 
         self.text = Text(text="0/0", x=0.8, y=-0.45)
-        self.hp = Text(text="<image:assets/NewImage-2>   " +
-                       str(self.hp), x=-0.85, y=-0.45)
-        self.weapons = [ak_47(who=self, global_var=self.global_var), ACP_Smith(
-            who=self, global_var=self.global_var)]
+        self.hp = Text(
+            text="<image:assets/NewImage-2>   " + str(self.hp), x=-0.85, y=-0.45
+        )
+        self.weapons = [
+            ak_47(who=self, global_var=self.global_var),
+            ACP_Smith(who=self, global_var=self.global_var),
+        ]
         self.weapons[0].enabled = False
         self.weapons[0].enabled = True
 
@@ -33,7 +36,7 @@ class Player(FirstPersonController):
 
     def player_to_dict(self):
         resultat = {
-            "position": (self.world_x, round(self.world_y,4), self.world_z),
+            "position": (self.world_x, round(self.world_y, 4), self.world_z),
             "rotation": self.rotation_y,
             "global_var": {
                 "Crouch": self.global_var.Crouch,
@@ -41,7 +44,8 @@ class Player(FirstPersonController):
                 "Reload": self.global_var.Reload,
                 "Aiming": self.global_var.Crouch,
                 "Shooting": self.global_var.Crouch,
-                "Build": self.global_var.Crouch, },
+                "Build": self.global_var.Crouch,
+            },
             "hp": self.hp,
             "weapons": [type(wepon).__name__ for wepon in self.weapons],
             "current_weapon": self.current_weapon,
@@ -56,15 +60,23 @@ class Player(FirstPersonController):
                 v.enabled = False
 
     def update(self):
-        if not self.global_var.Reload and not self.global_var.Running and held_keys['shift']:
+        if (
+            not self.global_var.Reload
+            and not self.global_var.Running
+            and held_keys["shift"]
+        ):
             self.global_var.Running = True
             self.speed = 10
-        elif not self.global_var. Reload and self.global_var.Running and not held_keys['shift']:
+        elif (
+            not self.global_var.Reload
+            and self.global_var.Running
+            and not held_keys["shift"]
+        ):
             self.global_var.Running = False
             self.speed = 7
-        elif held_keys['control']:
+        elif held_keys["control"]:
             self.camera_pivot.position = Vec3(0, 1.5, 0)
-        elif not held_keys['control']:
+        elif not held_keys["control"]:
             self.camera_pivot.position = Vec3(0, 2, 0)
         return super().update()
 
@@ -85,7 +97,7 @@ class Player(FirstPersonController):
         return super().input(key)
 
     def update_hud(self, ammo, magazine):
-        self.text.text = str(ammo)+"/"+str(magazine)
+        self.text.text = str(ammo) + "/" + str(magazine)
 
 
 class Enginer(Player):
@@ -97,20 +109,29 @@ class Enginer(Player):
         self.barrier_count_old = self.barrier_count
 
     def update(self):
-        if held_keys['f'] and self.barrier_count > 0:
+        if held_keys["f"] and self.barrier_count > 0:
 
             self.global_var.Build = True
             if self.barrier_count == self.barrier_count_old:
                 self.barrier.visible = True
 
-            ray = raycast(self.camera_pivot.world_position,
-                          self.camera_pivot.forward, distance=10, ignore=(self,))
+            ray = raycast(
+                self.camera_pivot.world_position,
+                self.camera_pivot.forward,
+                distance=10,
+                ignore=(self,),
+            )
             if ray.hit:
                 self.barrier.world_position = ray.world_point + Vec3(0, 0.5, 0)
                 if self.barrier_count == self.barrier_count_old and mouse.left:
                     self.barrier_count -= 1
-                    e = Entity(model='cube', color=color.orange, position=ray.world_point +
-                               Vec3(0, 0.5, 0), collider='box', shader=lit_with_shadows_shader)
+                    e = Entity(
+                        model="cube",
+                        color=color.orange,
+                        position=ray.world_point + Vec3(0, 0.5, 0),
+                        collider="box",
+                        shader=lit_with_shadows_shader,
+                    )
                     self.barrier.visible = False
 
         else:

@@ -3,25 +3,31 @@ from particleSystem import ParticleSystem
 from ursina.shaders import lit_with_shadows_shader
 
 
-ak_47_texture = load_texture('assets/gun/Tix_1.png')
-ak_47_obj = 'assets/gun/ak_47.obj'
-ak_47_audio_shot = 'assets/lututu.wav'
-ak_47_audio_reload = 'assets/gun-reload-sound-fx_C_minor'
+ak_47_texture = load_texture("assets/gun/Tix_1.png")
+ak_47_obj = "assets/gun/ak_47.obj"
+ak_47_audio_shot = "assets/lututu.wav"
+ak_47_audio_reload = "assets/gun-reload-sound-fx_C_minor"
 
-ACP_Smith_texture = load_texture('assets/gun/ACP_Smith.jpg')
-ACP_Smith_obj = 'assets/gun/ACP_Smith.obj'
-ACP_Smith_audio_shot = 'assets/lututu.wav'
-ACP_Smith_audio_reload = 'assets/gun-reload-sound-fx_C_minor'
+ACP_Smith_texture = load_texture("assets/gun/ACP_Smith.jpg")
+ACP_Smith_obj = "assets/gun/ACP_Smith.obj"
+ACP_Smith_audio_shot = "assets/lututu.wav"
+ACP_Smith_audio_reload = "assets/gun-reload-sound-fx_C_minor"
 
 
 class Wepon(Entity):
-    def __init__(self,
-                 add_to_scene_entities=True,
-                 distance=100,
-                 who=None,
-                 global_var=None,
-                 **kwargs):
-        super().__init__(add_to_scene_entities, **kwargs, shader=lit_with_shadows_shader,)
+    def __init__(
+        self,
+        add_to_scene_entities=True,
+        distance=100,
+        who=None,
+        global_var=None,
+        **kwargs
+    ):
+        super().__init__(
+            add_to_scene_entities,
+            **kwargs,
+            shader=lit_with_shadows_shader,
+        )
 
         self.global_var = global_var
         self.distance = distance
@@ -48,26 +54,41 @@ class Wepon(Entity):
             pass
 
     def update(self):
-        if held_keys['left mouse'] and not self.global_var.Build and time.time() - self.startHit > self.hitTime and not self.global_var.Reload:
+        if (
+            held_keys["left mouse"]
+            and not self.global_var.Build
+            and time.time() - self.startHit > self.hitTime
+            and not self.global_var.Reload
+        ):
             self.global_var.Shooting = True
             self.startHit = time.time()
             self.hit()
-        elif self.global_var.Shooting and not held_keys['left mouse']:
+        elif self.global_var.Shooting and not held_keys["left mouse"]:
             self.global_var.Shooting = False
-        elif not self.global_var.Reload and held_keys['r'] and self.magazine > 0 and time.time() - self.startReload > self.reloadTime:
-            self.animate_rotation(value=Vec3(0, 50, 0),
-                                  duration=self.reloadTime/2)
+        elif (
+            not self.global_var.Reload
+            and held_keys["r"]
+            and self.magazine > 0
+            and time.time() - self.startReload > self.reloadTime
+        ):
+            self.animate_rotation(value=Vec3(0, 50, 0), duration=self.reloadTime / 2)
             self.global_var.Reload = True
             self.startReload = time.time()
             self.reload()
-        elif self.global_var.Reload and not held_keys['r'] and time.time() - self.startReload > self.reloadTime:
-            self.animate_rotation(value=Vec3(0, 90, 0),)
+        elif (
+            self.global_var.Reload
+            and not held_keys["r"]
+            and time.time() - self.startReload > self.reloadTime
+        ):
+            self.animate_rotation(
+                value=Vec3(0, 90, 0),
+            )
             self.global_var.Reload = False
             self.who.speed = 7
-        elif not self.global_var.Aiming and held_keys['right mouse']:
+        elif not self.global_var.Aiming and held_keys["right mouse"]:
             self.global_var.Aiming = True
             self.aiming()
-        elif self.global_var.Aiming and not held_keys['right mouse']:
+        elif self.global_var.Aiming and not held_keys["right mouse"]:
             self.global_var.Aiming = False
             self.aiming()
 
@@ -75,9 +96,13 @@ class Wepon(Entity):
         if self.amo > 0:
 
             v1, v2, v3, rotation_x, rotation_y = self.recoiling(
-                forward=self.who.camera_pivot.forward, rotation_x=self.who.camera_pivot.rotation_x, rotation_y=self.who.rotation_y)
+                forward=self.who.camera_pivot.forward,
+                rotation_x=self.who.camera_pivot.rotation_x,
+                rotation_y=self.who.rotation_y,
+            )
             self.who.camera_pivot.animate(
-                name='rotation_x', value=rotation_x, duration=.01)
+                name="rotation_x", value=rotation_x, duration=0.01
+            )
             # self.who.camera_pivot.rotation_x = rotation_x
             self.who.rotation_y = rotation_y
 
@@ -85,12 +110,14 @@ class Wepon(Entity):
                 origin=self.who.camera_pivot.world_position,
                 direction=LVector3f(v1, v2, v3),
                 distance=self.distance,
-                ignore=(self.who,))
+                ignore=(self.who,),
+            )
 
             if ray.hit:
                 print(ray.entities[-1]._parent.__class__.__name__)
-                ParticleSystem(position=ray.world_point,
-                               number=10, speed=1, duration=0.03)
+                ParticleSystem(
+                    position=ray.world_point, number=10, speed=1, duration=0.03
+                )
                 if ray.entities[-1]._parent.__class__.__name__ == "Enemy":
                     ray.entities[-1]._parent.hit(self.damage, target=self)
 
@@ -99,11 +126,14 @@ class Wepon(Entity):
             self.who.update_hud(self.amo, self.magazine)
 
     def recoiling(self, forward, rotation_x, rotation_y):
-        rotation_x -= self.recoil * (random.randint(33, 66)/100)
-        rotation_y -= self.recoil * (random.randint(33, 66)/100)
+        rotation_x -= self.recoil * (random.randint(33, 66) / 100)
+        rotation_y -= self.recoil * (random.randint(33, 66) / 100)
         v1, v2, v3 = forward
-        v1, v2, v3 = v1+v1*(random.randint(-6, 6)/100), v2+v2 * \
-            (random.randint(-6, 6)/100), v3+v3*(random.randint(-6, 6)/100)
+        v1, v2, v3 = (
+            v1 + v1 * (random.randint(-6, 6) / 100),
+            v2 + v2 * (random.randint(-6, 6) / 100),
+            v3 + v3 * (random.randint(-6, 6) / 100),
+        )
 
         return v1, v2, v3, rotation_x, rotation_y
 
@@ -128,9 +158,12 @@ class Wepon(Entity):
 
 
 class ak_47(Wepon):
-    def __init__(self, who=None, global_var=None,):
+    def __init__(
+        self,
+        who=None,
+        global_var=None,
+    ):
         super().__init__(
-
             parent=who.camera_pivot,
             model=ak_47_obj,
             texture=ak_47_texture,
@@ -143,7 +176,11 @@ class ak_47(Wepon):
 
 
 class ACP_Smith(Wepon):
-    def __init__(self, who=None, global_var=None,):
+    def __init__(
+        self,
+        who=None,
+        global_var=None,
+    ):
         super().__init__(
             parent=who.camera_pivot,
             model=ACP_Smith_obj,
@@ -166,8 +203,8 @@ class ACP_Smith(Wepon):
         self.audio_reload = ACP_Smith_audio_reload
 
     def recoiling(self, forward, rotation_x, rotation_y):
-        rotation_x -= self.recoil * (random.randint(33, 66)/100)
-        rotation_y -= self.recoil * (random.randint(-3, 3)/100)
+        rotation_x -= self.recoil * (random.randint(33, 66) / 100)
+        rotation_y -= self.recoil * (random.randint(-3, 3) / 100)
         v1, v2, v3 = forward
         return v1, v2, v3, rotation_x, rotation_y
 
@@ -175,7 +212,7 @@ class ACP_Smith(Wepon):
 class Prefabs(Entity):
     def __init__(self, **kwargs):
         super().__init__(
-            model='cube',
+            model="cube",
             color=color.black33,
             **kwargs,
         )

@@ -10,9 +10,9 @@ window.windowed_size = 1.3
 window.title = "FPS Ursina Multiplayer"
 window.borderless = False
 
-from player import Player,Enginer,Medic
+from player import Player, Enginer, Medic
 from enemy import Enemy
-from maps import Test
+from maps import Test, Map
 import globalVar
 
 globalVar.initialize()
@@ -23,10 +23,18 @@ prev_main_player = main_player.player_to_dict()
 enemies = []
 in_game = True
 
+maps = {}
+current_map = None
+
+for map in Map.list_map():
+    map_info = map.map_info()
+    maps[map_info["name"]] = map_info
+
+
 # username = input("Enter your username: ")
 username = "Kacper" + str(random())
-#TODO scope change fov
-#connect to server and negotiating map, class
+# TODO scope change fov
+# connect to server and negotiating map, class
 while True:
     # server_addr = input("Enter server IP: ")
     # server_port = input("Enter server port: ")
@@ -46,13 +54,17 @@ while True:
     try:
         globalVar.connection.connect()
     except ConnectionRefusedError:
-        print("\nConnection refused! This can be because server hasn't started or has reached it's player limit.")
+        print(
+            "\nConnection refused! This can be because server hasn't started or has reached it's player limit."
+        )
         # error_occurred = True
     except socket.timeout:
         print("\nServer took too long to respond, please try again...")
         # error_occurred = True
     except socket.gaierror:
-        print("\nThe IP address you entered is invalid, please try again with a valid address...")
+        print(
+            "\nThe IP address you entered is invalid, please try again with a valid address..."
+        )
         # error_occurred = True
     finally:
         globalVar.connection.settimeout(None)
@@ -75,10 +87,8 @@ def receive():
 
         if info["object"] == "player":
             enemy_id = info["id"]
-
             if info["joined"]:
-                new_enemy = Enemy(
-                    Vec3(*info["position"]), enemy_id, info["username"])
+                new_enemy = Enemy(Vec3(*info["position"]), enemy_id, info["username"])
                 new_enemy.health = info["hp"]
                 enemies.append(new_enemy)
                 continue
@@ -97,8 +107,10 @@ def receive():
             enemy.rotation_y = info["rotation"]
             enemy.current_weapon = info["current_weapon"]
 
-        if info["object"] != "player":
-            print(info)
+        if info["object"] == "map":
+            for map in Map.list_map():
+                if map.__name__ == info["current_map"]["name"]:
+                    map()
 
 
 msg_thread = threading.Thread(target=receive, daemon=True)
@@ -107,7 +119,7 @@ msg_thread.start()
 
 def input(key):
 
-    if key == 'escape':
+    if key == "escape":
         global in_game
 
         if in_game:
@@ -121,7 +133,7 @@ def input(key):
             mouse.visible = False
             in_game = True
 
-    if key == 'q':
+    if key == "q":
         quit()
 
 
@@ -135,7 +147,7 @@ def update():
         prev_main_player = main_player.player_to_dict()
 
 
-#enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska ku***")
+# enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska ku***")
 
-map = Test()
+
 app.run()

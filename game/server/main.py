@@ -3,21 +3,22 @@ import json
 import time
 import random
 import threading
-# you have to set
+
+# pyset
 # export PYTHONPATH=/home/USERNAME/Desktop/ursina_engine
 from game.client.maps import Map, Test
 
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKCYAN = "\033[96m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
 
 
 ADDR = "0.0.0.0"
@@ -37,10 +38,19 @@ print(bcolors.OKGREEN + "MAP:" + bcolors.ENDC)
 for map in Map.list_map():
     map_info = map.map_info()
     maps[map_info["name"]] = map_info
-    print(bcolors.OKGREEN + " - "+map_info["name"] + " (" +map_info["description"] +")"+ bcolors.ENDC)
+    print(
+        bcolors.OKGREEN
+        + " - "
+        + map_info["name"]
+        + " ("
+        + map_info["description"]
+        + ")"
+        + bcolors.ENDC
+    )
 
 current_map = random.choice(list(maps.values()))
 print(current_map)
+
 
 def generate_id(player_list: dict, max_players: int):
     while True:
@@ -88,7 +98,8 @@ def handle_messages(identifier: str):
 
         if msg_json["object"] == "hit":
             print(
-                f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}")
+                f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}"
+            )
             players[msg_json["target_id"]]["hp"] -= msg_json["damage"]
 
         print(bcolors.OKBLUE + str(players[identifier]) + bcolors.ENDC)
@@ -109,8 +120,16 @@ def handle_messages(identifier: str):
             player_info = players[player_id]
             player_conn: socket.socket = player_info["socket"]
             try:
-                player_conn.send(json.dumps(
-                    {"id": identifier, "object": "player", "joined": False, "left": True}).encode("utf8"))
+                player_conn.send(
+                    json.dumps(
+                        {
+                            "id": identifier,
+                            "object": "player",
+                            "joined": False,
+                            "left": True,
+                        }
+                    ).encode("utf8")
+                )
             except OSError:
                 pass
 
@@ -126,27 +145,38 @@ def main():
         # Accept new connection and assign unique ID
         conn, addr = connection.accept()
         new_id = generate_id(players, MAX_PLAYERS)
-        ######conn.send(new_id.encode("utf8"))
-        
-        # newid 
-        # map 
+        conn.send(new_id.encode("utf8"))
 
         username = conn.recv(MSG_SIZE).decode("utf8")
-
+        print(username)
         new_player_info = {
             "socket": conn,
             "username": username,
             "position": (0, 1, 0),
-            "rotation": 0, "global_var": {
+            "rotation": 0,
+            "global_var": {
                 "Crouch": False,
                 "Running": False,
                 "Reload": False,
                 "Aiming": False,
                 "Shooting": False,
-                "Build": False, },
+                "Build": False,
+            },
             "hp": 100,
             "weapons": [],
-            "current_weapon": 0}
+            "current_weapon": 0,
+        }
+
+        # return actual map
+        player_conn: socket.socket = conn
+        player_conn.send(
+            json.dumps(
+                {
+                    "object": "map",
+                    "current_map": current_map,
+                }
+            ).encode("utf8")
+        )
 
         # Tell existing players about new player
         for player_id in players:
@@ -154,16 +184,19 @@ def main():
                 player_info = players[player_id]
                 player_conn: socket.socket = player_info["socket"]
                 try:
-                    player_conn.send(json.dumps({
-                        "id": new_id,
-                        "object": "player",
-                        "username": new_player_info["username"],
-                        "position": new_player_info["position"],
-                        "hp": new_player_info["hp"],
-                        "joined": True,
-                        "left": False
-
-                    }).encode("utf8"))
+                    player_conn.send(
+                        json.dumps(
+                            {
+                                "id": new_id,
+                                "object": "player",
+                                "username": new_player_info["username"],
+                                "position": new_player_info["position"],
+                                "hp": new_player_info["hp"],
+                                "joined": True,
+                                "left": False,
+                            }
+                        ).encode("utf8")
+                    )
                 except OSError:
                     pass
 
@@ -172,15 +205,19 @@ def main():
             if player_id != new_id:
                 player_info = players[player_id]
                 try:
-                    conn.send(json.dumps({
-                        "id": player_id,
-                        "object": "player",
-                        "username": player_info["username"],
-                        "position": player_info["position"],
-                        "hp": player_info["hp"],
-                        "joined": True,
-                        "left": False
-                    }).encode("utf8"))
+                    conn.send(
+                        json.dumps(
+                            {
+                                "id": player_id,
+                                "object": "player",
+                                "username": player_info["username"],
+                                "position": player_info["position"],
+                                "hp": player_info["hp"],
+                                "joined": True,
+                                "left": False,
+                            }
+                        ).encode("utf8")
+                    )
                     time.sleep(0.1)
                 except OSError:
                     pass
@@ -190,7 +227,8 @@ def main():
 
         # Start thread to receive messages from client
         msg_thread = threading.Thread(
-            target=handle_messages, args=(new_id,), daemon=True)
+            target=handle_messages, args=(new_id,), daemon=True
+        )
         msg_thread.start()
         print(f"New connection from {addr}, assigned ID: {new_id}...")
 

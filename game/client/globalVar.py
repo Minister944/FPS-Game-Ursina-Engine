@@ -1,4 +1,4 @@
-class globalVariable():
+class globalVariable:
     def __init__(self) -> None:
         self.Crouch = False
         self.Running = False
@@ -7,6 +7,7 @@ class globalVariable():
         self.Shooting = False
         self.Build = False
 
-def initialize(): 
-    global connection # netwoek connect
+
+def initialize():
+    global connection  # netwoek connect
     connection = None

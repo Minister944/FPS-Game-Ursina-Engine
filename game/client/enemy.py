@@ -14,7 +14,9 @@ class EnemyWeapon_AK_47(Entity):
             rotation=Vec3(2, 88, 1),
             position=Vec3(0.6, 1.4, 0.85),
             parent=who,
-            enabled=False)
+            enabled=False,
+        )
+
 
 class EnemyWeapon_ACP_Smith(Entity):
     def __init__(self, who=None):
@@ -25,7 +27,8 @@ class EnemyWeapon_ACP_Smith(Entity):
             rotation=Vec3(2, 88, 1),
             position=Vec3(0.6, 1.4, 0.85),
             parent=who,
-            enabled=False)
+            enabled=False,
+        )
 
 
 class Enemy(Entity):
@@ -39,8 +42,7 @@ class Enemy(Entity):
 
         self.current_weapon_old = 0
         self.current_weapon = 0
-        self.weapons = [EnemyWeapon_AK_47(
-            who=self), EnemyWeapon_ACP_Smith(who=self)]
+        self.weapons = [EnemyWeapon_AK_47(who=self), EnemyWeapon_ACP_Smith(who=self)]
         self.weapons[0].enabled = True
 
         self.name_tag = Text(
@@ -49,7 +51,7 @@ class Enemy(Entity):
             position=Vec3(0, 2.4, 0),
             scale=Vec2(5, 3),
             billboard=True,
-            origin=Vec2(0, 0)
+            origin=Vec2(0, 0),
         )
 
         self.head = Entity(
@@ -58,11 +60,11 @@ class Enemy(Entity):
             scale=Vec3(0.6, 0.6, 0.6),
             model="cube",
             collider="box",
-            texture='brick'
+            texture="brick",
         )
 
         # TODO texture face ...
-        #TODO fix only hit head working
+        # TODO fix only hit head working
 
         self.body = Entity(
             parent=self,
@@ -70,7 +72,7 @@ class Enemy(Entity):
             scale=Vec3(1, 1, 0.5),
             model="cube",
             collider="box",
-            color=color.blue
+            color=color.blue,
         )
 
         self.leg_left = Entity(
@@ -79,7 +81,7 @@ class Enemy(Entity):
             scale=Vec3(0.4, 1, 0.4),
             model="cube",
             collider="box",
-            color=color.light_gray
+            color=color.light_gray,
         )
 
         self.leg_right = Entity(
@@ -88,7 +90,7 @@ class Enemy(Entity):
             scale=Vec3(0.4, 1, 0.4),
             model="cube",
             collider="box",
-            color=color.light_gray
+            color=color.light_gray,
         )
 
         self.arm_left = Entity(
@@ -97,7 +99,7 @@ class Enemy(Entity):
             scale=Vec3(0.4, 1, 0.4),
             model="cube",
             collider="box",
-            color=color.light_gray
+            color=color.light_gray,
         )
 
         self.arm_right = Entity(
@@ -106,7 +108,7 @@ class Enemy(Entity):
             scale=Vec3(0.4, 1, 0.4),
             model="cube",
             collider="box",
-            color=color.light_gray
+            color=color.light_gray,
         )
 
     def hit(self, damage, target):
