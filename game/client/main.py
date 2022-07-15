@@ -25,10 +25,12 @@ in_game = True
 
 maps = {}
 current_map = None
+match = {}
 
-for map in Map.list_map():
-    map_info = map.map_info()
-    maps[map_info["name"]] = map_info
+
+# for map in Map.list_map():
+#     map_info = map.map_info()
+#     maps[map_info["name"]] = map_info
 
 
 # username = input("Enter your username: ")
@@ -74,6 +76,7 @@ while True:
 
 # receive data and processing
 def receive():
+    global current_map, match
     while True:
         try:
             info = globalVar.connection.receive_info()
@@ -106,11 +109,18 @@ def receive():
             enemy.world_position = Vec3(*info["position"])
             enemy.rotation_y = info["rotation"]
             enemy.current_weapon = info["current_weapon"]
+            continue
 
         if info["object"] == "map":
             for map in Map.list_map():
                 if map.__name__ == info["current_map"]["name"]:
-                    map()
+                    current_map = info["current_map"]
+                    a = map()
+                    continue
+
+        if info["object"] == "match":
+            match = info["match"]
+            continue
 
 
 msg_thread = threading.Thread(target=receive, daemon=True)
@@ -140,7 +150,6 @@ def input(key):
 def update():
     if main_player.hp > 0:
         global prev_main_player
-
         if prev_main_player != main_player.player_to_dict():
             globalVar.connection.send_player(main_player)
 
@@ -148,6 +157,5 @@ def update():
 
 
 # enemy_test = Enemy(Vec3(5,0,-10),"asad","Winiarska ku***")
-
 
 app.run()

@@ -42,7 +42,10 @@ class Enemy(Entity):
 
         self.current_weapon_old = 0
         self.current_weapon = 0
-        self.weapons = [EnemyWeapon_AK_47(who=self), EnemyWeapon_ACP_Smith(who=self)]
+        self.weapons = [
+            EnemyWeapon_AK_47(who=self),
+            EnemyWeapon_ACP_Smith(who=self),
+        ]
         self.weapons[0].enabled = True
 
         self.name_tag = Text(
