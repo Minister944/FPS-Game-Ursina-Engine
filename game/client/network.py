@@ -47,11 +47,7 @@ class Network:
         if not msg:
             return None
 
-        msg_decoded = msg.decode("utf8")
-
-        msg_json = json.loads(msg_decoded)
-
-        return msg_json
+        return msg
 
     def hit(self, target_id: str, damage: int, kill: bool = False):
         hit_info = {

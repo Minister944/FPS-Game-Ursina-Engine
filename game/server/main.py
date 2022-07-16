@@ -7,6 +7,7 @@ import threading
 # export PYTHONPATH=/home/USERNAME/Desktop/ursina_engine
 from game.client.maps import Map, Test
 from logg_color import logg
+from game.utils.utils import split_info
 
 ADDR = "0.0.0.0"
 PORT = 1026  # kill service on port: sudo lsof -i:1026
@@ -73,6 +74,40 @@ def send_info(conn, data):
         return False
 
 
+def object_trigger(msg_decoded, identifier, username):
+    try:
+        msg_json = json.loads(msg_decoded)
+    except Exception as e:
+        print(e)
+        return
+
+    logg(text=f"Received message from player {username} with ID {identifier}")
+    if msg_json["object"] == "player":
+        players[identifier]["position"] = msg_json["position"]
+        players[identifier]["rotation"] = msg_json["rotation"]
+        players[identifier]["hp"] = msg_json["hp"]
+        players[identifier]["global_var"] = msg_json["global_var"]
+        players[identifier]["weapons"] = msg_json["weapons"]
+        players[identifier]["current_weapon"] = msg_json["current_weapon"]
+
+    if msg_json["object"] == "hit":
+        logg(
+            "header",
+            f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}",
+        )
+        players[msg_json["target_id"]]["hp"] -= msg_json["damage"]
+
+    # Tell other players about player changen
+    for player_id in players:
+        if player_id != identifier:
+            player_info = players[player_id]
+            player_conn: socket.socket = player_info["socket"]
+            try:
+                player_conn.sendall(msg_decoded.encode("utf8"))
+            except OSError:
+                pass
+
+
 def handle_messages(identifier: str):
     client_info = players[identifier]
     conn: socket.socket = client_info["socket"]
@@ -87,47 +122,8 @@ def handle_messages(identifier: str):
         if not msg:
             break
 
-        msg_decoded = msg.decode("utf8")
-
-        # nieraz kurwy sie sklejaja
-        # example {"object": "player", "id": "6", "joined": false, "left": false, "position": [5.0, -0.4177, 0.0], "rotation": 35.4666633605957, "global_var": {"Crouch": false, "Running": false, "Reload": false, "Aiming": false, "Shooting": false, "Build": false}, "hp": 125, "weapons": ["ak_47", "ACP_Smith"], "current_weapon": 0}{"object": "player", "id": "6", "joined": false, "left": false, "position": [5.0, -0.5154, 0.0], "rotation": 81.39259338378906, "global_var": {"Crouch": false, "Running": false, "Reload": false, "Aiming": false, "Shooting": false, "Build": false}, "hp": 125, "weapons": ["ak_47", "ACP_Smith"], "current_weapon": 0}{"object": "player", "id": "6", "joined": false, "left": false, "position": [5.0, -0.7975, 0.0], "rotation": 81.39259338378906, "global_var": {"Crouch": false, "Running": false, "Reload": false, "Aiming": false, "Shooting": false, "Build": false}, "hp": 125, "weapons": ["ak_47", "ACP_Smith"], "current_weapon": 0}
-        # try:
-        #     left_bracket_index = msg_decoded.index("{")
-        #     right_bracket_index = msg_decoded.index("}") + 1
-        #     msg_decoded = msg_decoded[left_bracket_index:right_bracket_index]
-        # except ValueError:
-        #     continue
-        try:
-            msg_json = json.loads(msg_decoded)
-        except Exception as e:
-            print(e)
-            continue
-
-        logg(text=f"Received message from player {username} with ID {identifier}")
-        if msg_json["object"] == "player":
-            players[identifier]["position"] = msg_json["position"]
-            players[identifier]["rotation"] = msg_json["rotation"]
-            players[identifier]["hp"] = msg_json["hp"]
-            players[identifier]["global_var"] = msg_json["global_var"]
-            players[identifier]["weapons"] = msg_json["weapons"]
-            players[identifier]["current_weapon"] = msg_json["current_weapon"]
-
-        if msg_json["object"] == "hit":
-            logg(
-                "header",
-                f"Player {username} give {msg_json['damage']} damage to {players[msg_json['target_id']]['username']}",
-            )
-            players[msg_json["target_id"]]["hp"] -= msg_json["damage"]
-
-        # Tell other players about player changen
-        for player_id in players:
-            if player_id != identifier:
-                player_info = players[player_id]
-                player_conn: socket.socket = player_info["socket"]
-                try:
-                    player_conn.sendall(msg_decoded.encode("utf8"))
-                except OSError:
-                    pass
+        for msg_decoded in split_info(msg.decode("utf8")):
+            object_trigger(msg_decoded, identifier, username)
 
     # Tell other players about player leaving
     for player_id in players:
@@ -181,6 +177,7 @@ def main():
         assign_to_team(new_id)
 
         # return basic info (current map, match info points...)
+        time.sleep(0.1)
         send_info(conn, {"object": "map", "current_map": current_map})
         time.sleep(0.1)
         send_info(conn, {"object": "match", "match": match})
@@ -202,7 +199,7 @@ def main():
                     "left": False,
                 }
                 send_info(player_conn, data)
-
+        time.sleep(0.1)
         # Tell new player about existing players
         for player_id in players:
             if player_id != new_id:
@@ -218,7 +215,7 @@ def main():
                     "left": False,
                 }
                 send_info(conn, data)
-
+        time.sleep(0.1)
         # Start thread to receive messages from client
         msg_thread = threading.Thread(
             target=handle_messages, args=(new_id,), daemon=True
