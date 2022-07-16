@@ -90,20 +90,24 @@ def receive():
 
         if info["object"] == "player":
             enemy_id = info["id"]
+
             if info["joined"]:
                 new_enemy = Enemy(Vec3(*info["position"]), enemy_id, info["username"])
                 new_enemy.health = info["hp"]
                 enemies.append(new_enemy)
-                continue
 
             enemy = None
-
             for e in enemies:
                 if e.id == enemy_id:
                     enemy = e
                     break
 
             if not enemy:
+                continue
+
+            if info["left"]:
+                enemies.remove(enemy)
+                destroy(enemy)
                 continue
 
             enemy.world_position = Vec3(*info["position"])
