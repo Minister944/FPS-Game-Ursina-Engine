@@ -194,12 +194,15 @@ def main():
                     "object": "player",
                     "username": new_player_info["username"],
                     "position": new_player_info["position"],
+                    "rotation": new_player_info["rotation"],
+                    "current_weapon": new_player_info["current_weapon"],
                     "hp": new_player_info["hp"],
                     "joined": True,
                     "left": False,
                 }
                 send_info(player_conn, data)
         time.sleep(0.1)
+
         # Tell new player about existing players
         for player_id in players:
             if player_id != new_id:
@@ -210,6 +213,8 @@ def main():
                     "object": "player",
                     "username": player_info["username"],
                     "position": player_info["position"],
+                    "rotation": new_player_info["rotation"],
+                    "current_weapon": new_player_info["current_weapon"],
                     "hp": player_info["hp"],
                     "joined": True,
                     "left": False,

@@ -3,7 +3,7 @@ from ursina import *
 import threading
 import socket
 from network import Network
-from random import random
+import random
 import json
 
 app = Ursina(fullscreen=False, vsync=False)
@@ -29,11 +29,6 @@ in_game = True
 maps = {}
 current_map = None
 match = {}
-
-
-# for map in Map.list_map():
-#     map_info = map.map_info()
-#     maps[map_info["name"]] = map_info
 
 
 # username = input("Enter your username: ")
@@ -86,7 +81,9 @@ def object_trigger(msg_decoded):
         print(e)
         return
 
+    print(f"Received message {msg_json['object']}")
     print(msg_json)
+
     if msg_json["object"] == "player":
 
         enemy_id = msg_json["id"]
@@ -97,7 +94,6 @@ def object_trigger(msg_decoded):
             )
             new_enemy.health = msg_json["hp"]
             enemies.append(new_enemy)
-            return
 
         enemy = None
         for e in enemies:
@@ -155,7 +151,6 @@ def input(key):
 
     if key == "escape":
         global in_game
-
         if in_game:
             mouse.locked = False
             mouse.visible = True
