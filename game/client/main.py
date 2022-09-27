@@ -81,19 +81,28 @@ def object_trigger(msg_decoded):
         print(e)
         return
 
-    print(f"Received message {msg_json['object']}")
+    print(f"Received message trigger{msg_json['object']}")
     print(msg_json)
 
-    if msg_json["object"] == "player":
-
+    if msg_json["object"] == "join":
         enemy_id = msg_json["id"]
 
-        if msg_json["joined"]:
-            new_enemy = Enemy(
-                Vec3(*msg_json["position"]), enemy_id, msg_json["username"]
-            )
-            new_enemy.health = msg_json["hp"]
-            enemies.append(new_enemy)
+        new_enemy = Enemy(identifier=enemy_id, username=msg_json["username"])
+        enemies.append(new_enemy)
+        return
+
+    if msg_json["object"] == "left":
+        enemy_id = msg_json["id"]
+
+        for e in enemies:
+            if e.id == enemy_id:
+                enemies.remove(e)
+                destroy(e)
+                return
+        return
+
+    if msg_json["object"] == "player":
+        enemy_id = msg_json["id"]
 
         enemy = None
         for e in enemies:
@@ -102,11 +111,6 @@ def object_trigger(msg_decoded):
                 break
 
         if not enemy:
-            return
-
-        if msg_json["left"]:
-            enemies.remove(enemy)
-            destroy(enemy)
             return
 
         enemy.world_position = Vec3(*msg_json["position"])

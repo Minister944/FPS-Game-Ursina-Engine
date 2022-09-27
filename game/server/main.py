@@ -3,6 +3,7 @@ import json
 import time
 import random
 import threading
+from datetime import datetime
 
 # export PYTHONPATH=/home/USERNAME/Desktop/ursina_engine
 from game.client.maps import Map, Test
@@ -13,6 +14,9 @@ ADDR = "0.0.0.0"
 PORT = 1026  # kill service on port: sudo lsof -i:1026
 MAX_PLAYERS = 10
 MSG_SIZE = 2048
+
+TIME_BEFORE_ROUND = 7
+TIME_ROUND = 180
 
 # Setup server socket
 connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,6 +50,7 @@ def assign_to_team(id_player: str):
     if len(match["attacker"]) > len(match["defenders"]):
         match["defenders"].append(id_player)
         logg("okgreen", f"add {players[id_player]['username']}  to team defenders")
+        return
 
     match["attacker"].append(id_player)
     logg("okgreen", f"add {players[id_player]['username']}  to team attacker")
@@ -72,6 +77,72 @@ def send_info(conn, data):
 
     except OSError:
         return False
+
+
+def send_info_all(data):
+    # TODO ignore
+    for player_id in players:
+        player_info = players[player_id]
+        player_conn: socket.socket = player_info["socket"]
+        send_info(player_conn, data)
+
+
+def start_match():
+
+    while True:
+        logg("HEADER", f"round {match['point_attacker'] + match['point_defenders']}")
+        match["state"] = "before_round"
+        data = {"object": "match", "match": match}
+        send_info_all(data)
+
+        end_time_before_round = datetime.now().timestamp() + TIME_BEFORE_ROUND
+
+        while True:
+            if end_time_before_round < datetime.now().timestamp():
+                break
+
+        match["state"] = "in_round"
+        data = {"object": "match", "match": match}
+        send_info_all(data)
+
+        end_time_in_round = datetime.now().timestamp() + TIME_ROUND
+
+        while True:
+
+            live_attacker = 0
+            for a in match["attacker"]:
+                for player_id in players:
+                    if a == player_id and players[player_id]["hp"] >= 0:
+                        live_attacker += 1
+
+            live_defenders = 0
+            for a in match["defenders"]:
+                for player_id in players:
+                    if a == player_id and players[player_id]["hp"] >= 0:
+                        live_defenders += 1
+
+            if live_attacker < 0:
+                match["point_defenders"] += 1
+                break
+
+            if live_defenders < 0:
+                match["point_attacker"] += 1
+                break
+
+            if end_time_in_round < datetime.now().timestamp():
+                match["point_defenders"] += 1
+                break
+
+        if match["point_attacker"] + match["point_defenders"] > 10:
+            if match["point_attacker"] - 2 < match["point_defenders"]:
+                logg("WARNING", "win defenders")
+                connection.close()
+                break
+
+            if match["point_defenders"] - 2 < match["point_attacker"]:
+                logg("WARNING", "win attacker")
+                connection.close()
+                break
 
 
 def object_trigger(msg_decoded, identifier, username):
@@ -132,10 +203,8 @@ def handle_messages(identifier: str):
             player_conn: socket.socket = player_info["socket"]
 
             data = {
-                "object": "player",
+                "object": "left",
                 "id": identifier,
-                "joined": False,
-                "left": True,
             }
 
             send_info(player_conn, data)
@@ -190,15 +259,9 @@ def main():
                 player_conn: socket.socket = player_info["socket"]
 
                 data = {
+                    "object": "join",
                     "id": new_id,
-                    "object": "player",
-                    "username": new_player_info["username"],
-                    "position": new_player_info["position"],
-                    "rotation": new_player_info["rotation"],
-                    "current_weapon": new_player_info["current_weapon"],
-                    "hp": new_player_info["hp"],
-                    "joined": True,
-                    "left": False,
+                    "username": username,
                 }
                 send_info(player_conn, data)
         time.sleep(0.1)
@@ -209,15 +272,9 @@ def main():
                 player_info = players[player_id]
 
                 data = {
+                    "object": "join",
                     "id": player_id,
-                    "object": "player",
-                    "username": player_info["username"],
-                    "position": player_info["position"],
-                    "rotation": new_player_info["rotation"],
-                    "current_weapon": new_player_info["current_weapon"],
-                    "hp": player_info["hp"],
-                    "joined": True,
-                    "left": False,
+                    "username": username,
                 }
                 send_info(conn, data)
         time.sleep(0.1)
@@ -226,6 +283,10 @@ def main():
             target=handle_messages, args=(new_id,), daemon=True
         )
         msg_thread.start()
+
+        if len(match["defenders"]) > 3 and len(match["attacker"]) > 3:
+            msg_thread = threading.Thread(target=start_match, daemon=True)
+            msg_thread.start()
 
         logg(text=f"New connection from {addr}, assigned ID: {new_id}...")
 

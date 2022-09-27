@@ -32,7 +32,12 @@ class EnemyWeapon_ACP_Smith(Entity):
 
 
 class Enemy(Entity):
-    def __init__(self, position: Vec3, identifier: str, username: str):
+    def __init__(
+        self,
+        identifier: str,
+        username: str,
+        position: Vec3 = (0, 0, 0),
+    ):
         super().__init__(position=position, shader=lit_with_shadows_shader)
 
         self.hp = 100
