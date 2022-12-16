@@ -11,6 +11,9 @@ window.windowed_size = 1.3
 window.title = "FPS Ursina Multiplayer"
 window.borderless = False
 
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))[:-11]
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
 from player import Player, Enginer, Medic
 from enemy import Enemy
 from maps import Test, Map
@@ -32,18 +35,20 @@ match = {}
 
 
 # username = input("Enter your username: ")
-username = "Kacper " + str(random.randint(1, 100))
+username = "Kacper" + str(random.randint(1, 100))
 # TODO scope change fov
 # connect to server and negotiating map, class
 while True:
     # server_addr = input("Enter server IP: ")
     # server_port = input("Enter server port: ")
-    server_addr = "0.0.0.0"
+    server_addr = "127.0.0.1"
     server_port = 1026
     try:
         server_port = int(server_port)
     except ValueError:
-        print("\nThe port you entered was not a number, try again with a valid port...")
+        print(
+            "\nThe port you entered was not a number, try again with a valid port..."
+        )
         continue
 
     globalVar.connection = Network(server_addr, server_port, username)

@@ -3,10 +3,17 @@ import json
 import time
 import random
 import threading
+import os
+import sys
 from datetime import datetime
 
-# export PYTHONPATH=/home/USERNAME/Desktop/ursina_engine
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))[:-11]
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+
 from game.client.maps import Map, Test
+
 from logg_color import logg
 from game.utils.utils import split_info
 
@@ -49,7 +56,10 @@ def assign_to_team(id_player: str):
     """assign to a team with fewer players"""
     if len(match["attacker"]) > len(match["defenders"]):
         match["defenders"].append(id_player)
-        logg("okgreen", f"add {players[id_player]['username']}  to team defenders")
+        logg(
+            "okgreen",
+            f"add {players[id_player]['username']}  to team defenders",
+        )
         return
 
     match["attacker"].append(id_player)
@@ -90,7 +100,10 @@ def send_info_all(data):
 def start_match():
 
     while True:
-        logg("HEADER", f"round {match['point_attacker'] + match['point_defenders']}")
+        logg(
+            "HEADER",
+            f"round {match['point_attacker'] + match['point_defenders']}",
+        )
         match["state"] = "before_round"
         data = {"object": "match", "match": match}
         send_info_all(data)
